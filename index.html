@@ -3,1250 +3,1208 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Creation - IP Law Game</title>
+  <title>IP Inspector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <script src="/_sdk/element_sdk.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&amp;family=EB+Garamond:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <style>
     body {
       box-sizing: border-box;
     }
     
     * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+      font-family: 'IBM Plex Sans Thai', 'JetBrains Mono', sans-serif;
     }
-
-    html, body {
-      height: 100%;
-      width: 100%;
+    
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
     }
-
-    body {
-      font-family: 'EB Garamond', 'Crimson Text', serif;
-      background: #0a0a0a;
-      color: #d4d4d4;
-      overflow: auto;
+    
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
     }
-
-    .app-wrapper {
-      min-height: 100%;
-      width: 100%;
-      background: linear-gradient(180deg, #1a1410 0%, #0a0a0a 100%);
-      position: relative;
+    
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.98; }
     }
-
-    .grain-overlay {
-      position: fixed;
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(220, 38, 38, 0.6); }
+    }
+    
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+    
+    @keyframes slideIn {
+      from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .animate-slide-in {
+      animation: slideIn 0.5s ease-out forwards;
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    
+    .scanline-effect::after {
+      content: '';
+      position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none;
-      opacity: 0.8;
-      z-index: 100;
-    }
-
-    .game-container {
-      min-height: 100%;
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 40px 20px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .creation-header {
-      text-align: center;
-      margin-bottom: 40px;
-      padding-bottom: 30px;
-      border-bottom: 1px solid rgba(150, 100, 70, 0.2);
-    }
-
-    .artwork-display {
-      margin-bottom: 40px;
-    }
-
-    .artwork-frame {
-      background: rgba(20, 15, 10, 0.8);
-      border: 3px solid rgba(139, 115, 85, 0.4);
-      border-radius: 8px;
-      padding: 20px;
-      max-width: 600px;
-      margin: 0 auto 16px;
-      position: relative;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-      transition: all 0.8s ease;
-    }
-
-    .artwork-frame.degrading {
-      border-color: rgba(139, 69, 19, 0.6);
-      box-shadow: 0 8px 32px rgba(139, 69, 19, 0.3);
-    }
-
-    #artworkSVG {
-      width: 100%;
-      height: auto;
-      display: block;
-      border-radius: 4px;
-      transition: all 1s ease;
-    }
-
-    .star {
-      animation: twinkle 3s ease-in-out infinite;
-    }
-
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.9; }
-      50% { opacity: 0.3; }
-    }
-
-    .star:nth-child(even) {
-      animation-delay: 1.5s;
-    }
-
-    .degradation-overlay {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      right: 20px;
-      bottom: 20px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 1.2s ease;
-      background: repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 10px,
-        rgba(139, 69, 19, 0.1) 10px,
-        rgba(139, 69, 19, 0.1) 20px
+      background: linear-gradient(
+        transparent 50%,
+        rgba(0, 0, 0, 0.03) 50%
       );
-      mix-blend-mode: multiply;
-    }
-
-    .degradation-overlay.active {
-      opacity: 1;
-    }
-
-    .watermark-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-25deg);
-      font-size: 3em;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.15);
+      background-size: 100% 4px;
       pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.8s ease;
-      text-transform: uppercase;
-      letter-spacing: 8px;
-      font-family: 'Courier New', monospace;
     }
-
-    .watermark-overlay.active {
-      opacity: 1;
+    
+    .crt-effect {
+      animation: flicker 0.15s infinite;
     }
-
-    .artwork-caption {
-      text-align: center;
-      font-size: 0.95em;
-      color: #998877;
-      font-style: italic;
-      transition: color 0.8s ease;
+    
+    .risk-bar {
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
-    .artwork-caption.violated {
-      color: #8b4513;
+    
+    .case-file {
+      background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+      border: 1px solid #2a2a2a;
     }
-
-    .creation-title {
-      font-size: 3.2em;
-      font-weight: 700;
-      color: #c9a882;
-      margin-bottom: 12px;
-      font-family: 'Crimson Text', serif;
-      font-style: italic;
-      letter-spacing: 1px;
-      text-shadow: 2px 2px 8px rgba(201, 168, 130, 0.3);
+    
+    .stamp {
+      transform: rotate(-12deg);
+      animation: stamp-appear 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
-
-    .creator-subtitle {
-      font-size: 1.3em;
-      color: #8b7355;
-      margin-bottom: 8px;
-      letter-spacing: 2px;
-    }
-
-    .creation-meta {
-      font-size: 1em;
-      color: #665544;
-      font-style: italic;
-    }
-
-    .ownership-section {
-      background: rgba(20, 15, 10, 0.6);
-      border: 1px solid rgba(150, 100, 70, 0.3);
-      border-radius: 8px;
-      padding: 30px;
-      margin-bottom: 40px;
-      backdrop-filter: blur(10px);
-    }
-
-    .ownership-label {
-      font-size: 0.9em;
-      color: #8b7355;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      text-align: center;
-    }
-
-    .ownership-bar-container {
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(100, 70, 50, 0.4);
-      border-radius: 4px;
-      height: 40px;
-      position: relative;
-      overflow: hidden;
-      margin-bottom: 12px;
-    }
-
-    .ownership-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #c9a882 0%, #8b7355 100%);
-      transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 1.1em;
-      color: #1a1410;
-      position: relative;
-      box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.2);
-    }
-
-    .ownership-bar.critical {
-      background: linear-gradient(90deg, #8b4513 0%, #5a2d0f 100%);
-      animation: flicker 3s ease-in-out infinite;
-    }
-
-    @keyframes flicker {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    .ownership-status {
-      font-size: 0.85em;
-      color: #998877;
-      text-align: center;
-      font-style: italic;
-    }
-
-    .timeline-container {
-      margin-bottom: 50px;
-    }
-
-    .timeline-header {
-      font-size: 1.4em;
-      color: #c9a882;
-      margin-bottom: 24px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      padding-left: 8px;
-      border-left: 3px solid #8b7355;
-    }
-
-    .events-list {
-      position: relative;
-      padding-left: 40px;
-    }
-
-    .events-list::before {
-      content: '';
-      position: absolute;
-      left: 8px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: linear-gradient(180deg, #8b7355 0%, rgba(139, 115, 85, 0.2) 100%);
-    }
-
-    .event-item {
-      position: relative;
-      margin-bottom: 30px;
-      padding-left: 24px;
-      opacity: 0;
-      animation: fadeInUp 0.8s ease forwards;
-    }
-
-    @keyframes fadeInUp {
-      from {
+    
+    @keyframes stamp-appear {
+      0% { 
+        transform: rotate(-12deg) scale(2);
         opacity: 0;
-        transform: translateY(20px);
       }
-      to {
+      100% { 
+        transform: rotate(-12deg) scale(1);
         opacity: 1;
-        transform: translateY(0);
       }
     }
-
-    .event-item::before {
-      content: '';
-      position: absolute;
-      left: -36px;
-      top: 4px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #8b7355;
-      border: 2px solid #1a1410;
-      box-shadow: 0 0 12px rgba(139, 115, 85, 0.6);
-    }
-
-    .event-item.violation::before {
-      background: #c94f4f;
-      box-shadow: 0 0 12px rgba(201, 79, 79, 0.8);
-    }
-
-    .event-time {
-      font-size: 0.75em;
-      color: #665544;
-      margin-bottom: 6px;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 1px;
-    }
-
-    .event-content {
-      background: rgba(20, 15, 10, 0.4);
-      border: 1px solid rgba(100, 70, 50, 0.3);
-      border-radius: 6px;
-      padding: 16px;
-      line-height: 1.7;
-      font-size: 1.05em;
-    }
-
-    .event-item.violation .event-content {
-      border-color: rgba(201, 79, 79, 0.5);
-      background: rgba(30, 10, 10, 0.4);
-    }
-
-    .tools-section {
-      background: rgba(20, 15, 10, 0.6);
-      border: 1px solid rgba(150, 100, 70, 0.3);
-      border-radius: 8px;
-      padding: 30px;
-      margin-bottom: 40px;
-    }
-
-    .tools-header {
-      font-size: 1.3em;
-      color: #c9a882;
-      margin-bottom: 20px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-align: center;
-    }
-
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-    }
-
-    .tool-button {
-      background: linear-gradient(135deg, rgba(40, 30, 20, 0.8) 0%, rgba(30, 22, 15, 0.8) 100%);
-      border: 1px solid rgba(139, 115, 85, 0.4);
-      border-radius: 6px;
-      padding: 20px 16px;
-      color: #d4d4d4;
-      font-size: 0.95em;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.4s ease;
-      font-family: 'EB Garamond', serif;
-      text-align: center;
+    
+    .btn-decision {
+      transition: all 0.2s ease;
       position: relative;
       overflow: hidden;
     }
-
-    .tool-button::before {
+    
+    .btn-decision::before {
       content: '';
       position: absolute;
       top: 0;
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(201, 168, 130, 0.2), transparent);
-      transition: left 0.6s ease;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.5s ease;
     }
-
-    .tool-button:not(:disabled):hover::before {
+    
+    .btn-decision:hover::before {
       left: 100%;
     }
-
-    .tool-button:not(:disabled):hover {
-      border-color: #c9a882;
-      transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(201, 168, 130, 0.3);
+    
+    .glitch-text {
+      position: relative;
     }
-
-    .tool-button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      border-color: rgba(100, 70, 50, 0.2);
+    
+    .terminal-cursor {
+      display: inline-block;
+      width: 10px;
+      height: 20px;
+      background: #dc2626;
+      animation: blink 1s step-end infinite;
     }
-
-    .tool-button.used {
-      background: linear-gradient(135deg, rgba(30, 40, 30, 0.8) 0%, rgba(20, 30, 20, 0.8) 100%);
-      border-color: rgba(100, 150, 100, 0.6);
-      color: #a0c0a0;
+    
+    .grid-bg {
+      background-image: 
+        linear-gradient(rgba(220, 38, 38, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(220, 38, 38, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
     }
-
-    .tool-icon {
-      font-size: 1.8em;
-      display: block;
-      margin-bottom: 8px;
-    }
-
-    .tool-name {
-      display: block;
-      font-size: 1em;
-      margin-bottom: 4px;
-      font-weight: 600;
-    }
-
-    .tool-desc {
-      font-size: 0.8em;
-      color: #998877;
-      line-height: 1.4;
-      font-style: italic;
-    }
-
-    .game-controls {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .control-button {
-      background: linear-gradient(135deg, rgba(40, 30, 20, 0.9) 0%, rgba(30, 22, 15, 0.9) 100%);
-      border: 2px solid rgba(139, 115, 85, 0.5);
-      border-radius: 6px;
-      padding: 14px 32px;
-      color: #d4d4d4;
-      font-size: 1em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-family: 'EB Garamond', serif;
-      margin: 0 8px;
-      letter-spacing: 1px;
-    }
-
-    .control-button:hover {
-      border-color: #c9a882;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(201, 168, 130, 0.3);
-    }
-
-    .control-button.primary {
-      background: linear-gradient(135deg, #8b7355 0%, #6b5745 100%);
-      border-color: #c9a882;
-      color: #fff;
-    }
-
-    .control-button.primary:hover {
-      background: linear-gradient(135deg, #9b8365 0%, #7b6755 100%);
-      box-shadow: 0 6px 20px rgba(201, 168, 130, 0.5);
-    }
-
-    .game-over-modal {
+    
+    .noise-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.92);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      animation: fadeIn 0.6s ease;
-      backdrop-filter: blur(8px);
-    }
-
-    .game-over-modal.show {
-      display: flex;
-    }
-
-    .modal-content {
-      background: rgba(26, 20, 16, 0.95);
-      border: 2px solid;
-      border-radius: 12px;
-      padding: 50px 40px;
-      max-width: 600px;
-      text-align: center;
-      animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-    }
-
-    @keyframes scaleIn {
-      from {
-        transform: scale(0.7);
-        opacity: 0;
-      }
-      to {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    .modal-content.preserved {
-      border-color: #c9a882;
-    }
-
-    .modal-content.lost {
-      border-color: #8b4513;
-    }
-
-    .modal-icon {
-      font-size: 5em;
-      margin-bottom: 24px;
-      display: block;
-    }
-
-    .modal-title {
-      font-size: 2.8em;
-      font-weight: 700;
-      margin-bottom: 20px;
-      font-family: 'Crimson Text', serif;
-      font-style: italic;
-    }
-
-    .modal-content.preserved .modal-title {
-      color: #c9a882;
-      text-shadow: 0 0 20px rgba(201, 168, 130, 0.5);
-    }
-
-    .modal-content.lost .modal-title {
-      color: #8b4513;
-      text-shadow: 0 0 20px rgba(139, 69, 19, 0.5);
-    }
-
-    .modal-message {
-      font-size: 1.2em;
-      line-height: 1.8;
-      color: #d4d4d4;
-      margin-bottom: 30px;
-      font-style: italic;
-    }
-
-    .final-ownership {
-      font-size: 3em;
-      font-weight: 700;
-      margin: 30px 0;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 2px;
-    }
-
-    .modal-content.preserved .final-ownership {
-      color: #c9a882;
-    }
-
-    .modal-content.lost .final-ownership {
-      color: #8b4513;
-    }
-
-    .restart-button {
-      background: linear-gradient(135deg, #8b7355 0%, #6b5745 100%);
-      border: 2px solid #c9a882;
-      border-radius: 8px;
-      padding: 16px 48px;
-      color: #fff;
-      font-size: 1.2em;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'EB Garamond', serif;
-      letter-spacing: 2px;
-      transition: all 0.3s ease;
-      margin-top: 20px;
-    }
-
-    .restart-button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(201, 168, 130, 0.4);
-      background: linear-gradient(135deg, #9b8365 0%, #7b6755 100%);
-    }
-
-    @media (max-width: 768px) {
-      .creation-title {
-        font-size: 2.4em;
-      }
-
-      .creator-subtitle {
-        font-size: 1.1em;
-      }
-
-      .tools-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .modal-content {
-        margin: 20px;
-        padding: 40px 24px;
-      }
-
-      .modal-title {
-        font-size: 2.2em;
-      }
+      pointer-events: none;
+      opacity: 0.02;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     }
   </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
-  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
  </head>
- <body class="h-full">
-  <div class="grain-overlay"></div>
-  <div class="app-wrapper h-full">
-   <div class="game-container">
-    <div class="creation-header">
-     <h1 class="creation-title" id="creationTitle">Midnight Dreams</h1>
-     <div class="creator-subtitle">
-      สร้างสรรค์โดย <span id="creatorName">คุณ</span>
-     </div>
-     <div class="creation-meta" id="creationMeta">
-      ภาพวาดดิจิทัล
-     </div>
-    </div>
-    <div class="artwork-display">
-     <div class="artwork-frame" id="artworkFrame">
-      <svg viewBox="0 0 400 300" id="artworkSVG"><!-- Original pristine artwork --> <defs>
-        <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-         <stop offset="0%" style="stop-color:#1a1530;stop-opacity:1" />
-         <stop offset="100%" style="stop-color:#2d1b4e;stop-opacity:1" />
-        </linearGradient>
-        <filter id="glowFilter">
-         <feGaussianBlur stddeviation="3" result="coloredBlur" />
-         <femerge>
-          <femergenode in="coloredBlur" />
-          <femergenode in="SourceGraphic" />
-         </femerge>
-        </filter>
-       </defs> <!-- Background --> <rect width="400" height="300" fill="url(#skyGradient)" /> <!-- Stars --> <circle cx="50" cy="40" r="1.5" fill="#fff" opacity="0.9" class="star" /> <circle cx="120" cy="60" r="1" fill="#fff" opacity="0.7" class="star" /> <circle cx="200" cy="30" r="1.2" fill="#fff" opacity="0.8" class="star" /> <circle cx="280" cy="50" r="1" fill="#fff" opacity="0.6" class="star" /> <circle cx="350" cy="70" r="1.5" fill="#fff" opacity="0.9" class="star" /> <circle cx="90" cy="90" r="0.8" fill="#fff" opacity="0.5" class="star" /> <circle cx="320" cy="25" r="1" fill="#fff" opacity="0.7" class="star" /> <!-- Moon --> <circle cx="320" cy="80" r="35" fill="#ffd699" filter="url(#glowFilter)" class="moon" /> <circle cx="310" cy="75" r="30" fill="#2d1b4e" opacity="0.3" class="moon-crater" /> <!-- Mountains --> <path d="M 0 220 L 100 150 L 200 200 L 300 130 L 400 180 L 400 300 L 0 300 Z" fill="#1a0f2e" opacity="0.8" class="mountain" /> <!-- Foreground mountain --> <path d="M 0 250 L 80 200 L 150 230 L 250 170 L 350 210 L 400 190 L 400 300 L 0 300 Z" fill="#0d0818" class="mountain-front" /> <!-- Signature --> <text x="350" y="285" font-family="'Crimson Text', serif" font-size="12" fill="#8b7355" opacity="0.8" text-anchor="end" class="signature">
-        คุณ
-       </text>
-      </svg><!-- Degradation overlays -->
-      <div class="degradation-overlay" id="degradationOverlay"></div>
-      <div class="watermark-overlay" id="watermarkOverlay"></div>
-     </div>
-     <div class="artwork-caption" id="artworkCaption">
-      ผลงานต้นฉบับ — สมบูรณ์และบริสุทธิ์
-     </div>
-    </div>
-    <div class="ownership-section">
-     <div class="ownership-label">
-      สิทธิความเป็นเจ้าของ
-     </div>
-     <div class="ownership-bar-container">
-      <div class="ownership-bar" id="ownershipBar" style="width: 100%">
-       100%
+ <body class="h-full bg-black text-gray-100 overflow-auto">
+  <div class="noise-overlay"></div>
+  <div id="app" class="min-h-full grid-bg scanline-effect crt-effect relative"><!-- Header -->
+   <header class="border-b border-gray-800 bg-black/80 backdrop-blur-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3">
+     <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+       <div class="w-10 h-10 bg-gradient-to-br from-red-700 to-red-900 rounded flex items-center justify-center">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+       </div>
+       <div>
+        <h1 id="game-title" class="text-lg font-bold text-white mono tracking-wider">IP INSPECTOR</h1>
+        <p id="role-title" class="text-xs text-red-500 mono">ผู้ตรวจการด้านทรัพย์สินทางปัญญา</p>
+       </div>
+      </div>
+      <div class="flex items-center gap-6"><!-- AI Uses -->
+       <div class="flex items-center gap-2"><span class="text-xs text-gray-500 mono">AI ANALYSIS</span>
+        <div id="ai-uses" class="flex gap-1"><!-- AI use indicators will be rendered here -->
+        </div>
+       </div><!-- Credibility -->
+       <div class="flex items-center gap-2"><span class="text-xs text-gray-500 mono">ความน่าเชื่อถือ</span>
+        <div class="w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
+         <div id="credibility-bar" class="h-full bg-gradient-to-r from-red-600 to-red-500 risk-bar" style="width: 100%"></div>
+        </div><span id="credibility-text" class="text-xs mono text-red-500">100%</span>
+       </div><!-- Case Counter -->
+       <div class="text-right"><span class="text-xs text-gray-500 mono">CASE</span>
+        <p id="case-counter" class="text-lg font-bold mono text-white">01/08</p>
+       </div>
       </div>
      </div>
-     <div class="ownership-status" id="ownershipStatus">
-      ผลงานอยู่ภายใต้การควบคุมของคุณอย่างสมบูรณ์
+    </div>
+   </header><!-- Main Content -->
+   <main class="max-w-7xl mx-auto px-4 py-6">
+    <div class="grid grid-cols-12 gap-6"><!-- Case File - Center -->
+     <div class="col-span-8">
+      <div id="case-container" class="case-file rounded-lg overflow-hidden"><!-- Case content will be rendered here -->
+      </div><!-- Decision Buttons -->
+      <div id="decision-panel" class="mt-6 space-y-4"><!-- Decision buttons will be rendered here -->
+      </div>
+     </div><!-- Side Panel - Right -->
+     <div class="col-span-4 space-y-4"><!-- Legal Risk Meter -->
+      <div class="bg-gray-900/80 border border-gray-800 rounded-lg p-4">
+       <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-medium mono text-gray-400">LEGAL RISK ASSESSMENT</h3>
+        <div id="risk-level" class="px-2 py-1 bg-yellow-900/50 border border-yellow-700 rounded text-xs mono text-yellow-500">
+         MODERATE
+        </div>
+       </div>
+       <div class="relative h-48 bg-gray-950 rounded border border-gray-800 overflow-hidden">
+        <div class="absolute inset-0 flex flex-col justify-end p-2">
+         <div id="risk-meter" class="w-full bg-gradient-to-t from-red-600 via-yellow-600 to-green-600 rounded risk-bar" style="height: 50%">
+         </div>
+        </div><!-- Risk markers -->
+        <div class="absolute left-2 top-2 text-xs mono text-green-500">
+         LOW
+        </div>
+        <div class="absolute left-2 top-1/2 -translate-y-1/2 text-xs mono text-yellow-500">
+         MED
+        </div>
+        <div class="absolute left-2 bottom-2 text-xs mono text-red-500">
+         HIGH
+        </div><!-- Current level indicator -->
+        <div id="risk-indicator" class="absolute right-2 text-xs mono text-white bg-gray-900/80 px-2 py-1 rounded transition-all duration-500" style="bottom: 50%">
+         ◄ 50%
+        </div>
+       </div>
+       <div class="mt-3 space-y-2">
+        <div class="flex justify-between text-xs"><span class="text-gray-500">ความเสี่ยงด้านลิขสิทธิ์</span> <span id="copyright-risk" class="mono text-yellow-500">45%</span>
+        </div>
+        <div class="flex justify-between text-xs"><span class="text-gray-500">ความเสี่ยงด้านเครื่องหมายการค้า</span> <span id="trademark-risk" class="mono text-green-500">20%</span>
+        </div>
+        <div class="flex justify-between text-xs"><span class="text-gray-500">ความเสี่ยงด้านการฟ้องร้อง</span> <span id="lawsuit-risk" class="mono text-red-500">60%</span>
+        </div>
+       </div>
+      </div><!-- AI Analysis Panel -->
+      <div id="ai-panel" class="bg-gray-900/80 border border-gray-800 rounded-lg p-4">
+       <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-medium mono text-gray-400">AI ANALYSIS</h3><button id="ai-btn" class="px-3 py-1.5 bg-red-900/50 border border-red-700 rounded text-xs mono text-red-400 hover:bg-red-800/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"> 🔍 วิเคราะห์ </button>
+       </div>
+       <div id="ai-output" class="min-h-24 bg-black/50 rounded border border-gray-800 p-3 text-xs mono text-gray-500"><span class="text-gray-600">[SYSTEM READY]</span><br><span class="text-gray-600">กดปุ่มวิเคราะห์เพื่อรับคำแนะนำจาก AI</span><br><span class="text-red-500/50">⚠ การใช้ AI มากเกินไปจะลดความน่าเชื่อถือ</span>
+       </div>
+      </div><!-- Stats Panel -->
+      <div class="bg-gray-900/80 border border-gray-800 rounded-lg p-4">
+       <h3 class="text-sm font-medium mono text-gray-400 mb-3">DECISION HISTORY</h3>
+       <div id="stats" class="space-y-2 text-xs">
+        <div class="flex justify-between"><span class="text-gray-500">อนุญาต</span> <span id="stat-approved" class="mono text-green-500">0</span>
+        </div>
+        <div class="flex justify-between"><span class="text-gray-500">เตือน</span> <span id="stat-warned" class="mono text-yellow-500">0</span>
+        </div>
+        <div class="flex justify-between"><span class="text-gray-500">ปฏิเสธ</span> <span id="stat-rejected" class="mono text-red-500">0</span>
+        </div>
+        <div class="flex justify-between"><span class="text-gray-500">ขออนุญาต</span> <span id="stat-permission" class="mono text-blue-500">0</span>
+        </div>
+        <div class="flex justify-between"><span class="text-gray-500">ดำเนินคดี</span> <span id="stat-legal" class="mono text-purple-500">0</span>
+        </div>
+       </div>
+      </div>
      </div>
     </div>
-    <div class="game-controls"><button class="control-button primary" id="startButton" onclick="startGame()">เริ่มเรื่องราว</button> <button class="control-button" id="pauseButton" onclick="togglePause()" style="display: none;">หยุดชั่วคราว</button> <button class="control-button" onclick="resetGame()">เริ่มใหม่</button>
-    </div>
-    <div class="tools-section">
-     <div class="tools-header">
-      เครื่องมือทางกฎหมาย
+   </main><!-- Outcome Modal -->
+   <div id="outcome-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden items-center justify-center">
+    <div class="max-w-lg w-full mx-4 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden animate-slide-in">
+     <div id="outcome-header" class="px-6 py-4 border-b border-gray-800">
+      <h3 class="text-lg font-bold mono">ผลการตัดสินใจ</h3>
      </div>
-     <div class="tools-grid"><button class="tool-button" id="tool1" onclick="useTool('dmca')"> <span class="tool-icon">⚖️</span> <span class="tool-name">DMCA Takedown</span> <span class="tool-desc">ส่งคำขอลบผลงานที่ละเมิด</span> </button> <button class="tool-button" id="tool2" onclick="useTool('cease')"> <span class="tool-icon">📜</span> <span class="tool-name">Cease &amp; Desist</span> <span class="tool-desc">จดหมายเตือนให้หยุดการละเมิด</span> </button> <button class="tool-button" id="tool3" onclick="useTool('license')"> <span class="tool-icon">🤝</span> <span class="tool-name">ออกใบอนุญาต</span> <span class="tool-desc">อนุญาตให้ใช้อย่างถูกกฎหมาย</span> </button> <button class="tool-button" id="tool4" onclick="useTool('lawsuit')"> <span class="tool-icon">⚔️</span> <span class="tool-name">ฟ้องร้อง</span> <span class="tool-desc">ดำเนินคดีเพื่อเรียกค่าเสียหาย</span> </button> <button class="tool-button" id="tool5" onclick="useTool('watermark')"> <span class="tool-icon">🔏</span> <span class="tool-name">ลายน้ำดิจิทัล</span> <span class="tool-desc">ป้องกันการลอกในอนาคต</span> </button> <button class="tool-button" id="tool6" onclick="useTool('negotiate')"> <span class="tool-icon">💬</span> <span class="tool-name">เจรจาต่อรอง</span> <span class="tool-desc">พูดคุยเพื่อหาข้อตกลง</span> </button>
+     <div id="outcome-content" class="px-6 py-6"><!-- Outcome content will be rendered here -->
+     </div>
+     <div class="px-6 py-4 border-t border-gray-800 flex justify-end"><button id="outcome-next" class="px-6 py-2 bg-red-700 hover:bg-red-600 rounded text-sm mono transition-colors"> ดำเนินการต่อ → </button>
      </div>
     </div>
-    <div class="timeline-container">
-     <div class="timeline-header">
-      เส้นทางผลงาน
+   </div><!-- Game Over Modal -->
+   <div id="gameover-modal" class="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 hidden items-center justify-center">
+    <div class="max-w-2xl w-full mx-4 text-center animate-slide-in">
+     <div class="mb-8">
+      <div class="w-24 h-24 mx-auto bg-gradient-to-br from-red-700 to-red-900 rounded-full flex items-center justify-center mb-6">
+       <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg>
+      </div>
+      <h2 class="text-3xl font-bold mono mb-2">การตรวจสอบเสร็จสิ้น</h2>
+      <p class="text-gray-400">คุณได้พิจารณาคดีทั้งหมดแล้ว</p>
      </div>
-     <div class="events-list" id="eventsList"></div>
+     <div id="final-stats" class="bg-gray-900/80 border border-gray-800 rounded-lg p-6 mb-8"><!-- Final stats will be rendered here -->
+     </div>
+     <div id="final-message" class="bg-gray-900/50 border border-gray-700 rounded-lg p-6 mb-8 text-left"><!-- Final message will be rendered here -->
+     </div><button id="restart-btn" class="px-8 py-3 bg-red-700 hover:bg-red-600 rounded-lg mono text-lg transition-colors"> 🔄 เริ่มใหม่ </button>
     </div>
-   </div>
-  </div>
-  <div class="game-over-modal" id="gameOverModal">
-   <div class="modal-content" id="modalContent"><span class="modal-icon" id="modalIcon">✨</span>
-    <h2 class="modal-title" id="modalTitle">จบเรื่องราว</h2>
-    <p class="modal-message" id="modalMessage">ผลงานของคุณได้รับการปกป้อง</p>
-    <div class="final-ownership" id="finalOwnership">
-     100%
-    </div><button class="restart-button" onclick="resetGame()">เริ่มเรื่องใหม่</button>
    </div>
   </div>
   <script>
-    const defaultConfig = {
-      creation_name: "Midnight Dreams",
-      creator_name: "คุณ",
-      creation_type: "ภาพวาดดิจิทัล"
-    };
-
+    // ==================== GAME DATA ====================
+    const cases = [
+      {
+        id: 1,
+        title: "โลโก้แอปส่งอาหาร 'GrabFood-ish'",
+        category: "เครื่องหมายการค้า",
+        description: "สตาร์ทอัพในประเทศเปิดตัวแอปส่งอาหารชื่อ 'QuickBite' โดยใช้โลโก้สีเขียวมีลักษณะคล้ายมือถือหยิบอาหาร ซึ่งมีองค์ประกอบคล้ายคลึงกับ GrabFood อย่างเห็นได้ชัด",
+        evidence: [
+          "โลโก้ใช้โทนสีเขียวเหมือนกัน",
+          "มีไอคอนมือถือในลักษณะคล้ายกัน",
+          "ฟอนต์และการจัดวางใกล้เคียงต้นฉบับ"
+        ],
+        visual: "🍔📱",
+        visualBg: "from-green-900/30 to-green-950/50",
+        risks: { copyright: 30, trademark: 85, lawsuit: 70 },
+        baseRisk: 65,
+        aiAnalysis: "ระบบตรวจพบความคล้ายคลึง 78% กับเครื่องหมายการค้าที่จดทะเบียนแล้ว ความเสี่ยงจากการฟ้องร้อง: สูง อย่างไรก็ตาม การใช้สีเขียวในธุรกิจอาหารเป็นเรื่องปกติ ควรพิจารณาองค์ประกอบอื่นร่วมด้วย",
+        outcomes: {
+          approve: {
+            title: "ผลกระทบ: การฟ้องร้องเรียกค่าเสียหาย",
+            description: "Grab ดำเนินการฟ้องร้องในข้อหาละเมิดเครื่องหมายการค้า สตาร์ทอัพต้องจ่ายค่าเสียหาย 2.5 ล้านบาท และถูกบังคับให้เปลี่ยนโลโก้",
+            credibilityChange: -15,
+            type: "negative"
+          },
+          warn: {
+            title: "ผลกระทบ: การปรับปรุงโลโก้",
+            description: "สตาร์ทอัพยอมรับคำเตือนและปรับปรุงโลโก้ให้แตกต่างมากขึ้น หลีกเลี่ยงปัญหาทางกฎหมายได้ทันเวลา",
+            credibilityChange: 5,
+            type: "positive"
+          },
+          reject: {
+            title: "ผลกระทบ: ธุรกิจหยุดชะงัก",
+            description: "สตาร์ทอัพต้องหยุดให้บริการชั่วคราวเพื่อรีแบรนด์ทั้งหมด สูญเสียลูกค้าและนักลงทุนบางส่วน แต่หลีกเลี่ยงคดีความได้",
+            credibilityChange: 0,
+            type: "neutral"
+          },
+          permission: {
+            title: "ผลกระทบ: การเจรจาล้มเหลว",
+            description: "Grab ปฏิเสธการอนุญาตและส่งหนังสือเตือนทางกฎหมาย สตาร์ทอัพต้องรีแบรนด์พร้อมกับภาพลักษณ์ที่เสียหาย",
+            credibilityChange: -5,
+            type: "negative"
+          },
+          legal: {
+            title: "ผลกระทบ: คดีความยาวนาน",
+            description: "คดีลากยาวในศาลกว่า 2 ปี ทั้งสองฝ่ายเสียค่าใช้จ่ายทางกฎหมายจำนวนมาก การตัดสินใจนี้ถูกมองว่ารุนแรงเกินไป",
+            credibilityChange: -10,
+            type: "negative"
+          }
+        }
+      },
+      {
+        id: 2,
+        title: "ภาพ AI สไตล์ Studio Ghibli",
+        category: "ลิขสิทธิ์",
+        description: "ศิลปินดิจิทัลใช้ AI สร้างภาพในสไตล์ Studio Ghibli เพื่อขายเป็น NFT โดยอ้างว่าเป็น 'การสร้างสรรค์ใหม่ที่ได้แรงบันดาลใจ'",
+        evidence: [
+          "ใช้ prompt ระบุชื่อ Ghibli โดยตรง",
+          "ภาพมีลักษณะเฉพาะที่จดจำได้ของสตูดิโอ",
+          "นำไปขายในราคา 0.5 ETH ต่อภาพ"
+        ],
+        visual: "🎨🤖",
+        visualBg: "from-blue-900/30 to-purple-950/50",
+        risks: { copyright: 80, trademark: 45, lawsuit: 55 },
+        baseRisk: 60,
+        aiAnalysis: "การวิเคราะห์สไตล์ศิลปะไม่สามารถมีลิขสิทธิ์ได้โดยตรง แต่การใช้ชื่อแบรนด์อาจเข้าข่ายการแอบอ้าง ความเสี่ยงขึ้นอยู่กับการตีความของศาลในแต่ละประเทศ กรณีนี้ยังเป็นพื้นที่สีเทาทางกฎหมาย",
+        outcomes: {
+          approve: {
+            title: "ผลกระทบ: กระแสต่อต้านในโซเชียล",
+            description: "แฟนคลับ Ghibli และศิลปินดั้งเดิมวิพากษ์วิจารณ์อย่างหนัก เกิดแคมเปญ #ProtectArtists ส่งผลให้ตลาด NFT บางแห่งแบนผลงานประเภทนี้",
+            credibilityChange: -10,
+            type: "negative"
+          },
+          warn: {
+            title: "ผลกระทบ: การปรับเปลี่ยนแนวทาง",
+            description: "ศิลปินยอมถอดชื่อ Ghibli ออกจากคำอธิบาย และปรับการตลาดใหม่ ยังสามารถขายได้แต่ลดความขัดแย้ง",
+            credibilityChange: 5,
+            type: "positive"
+          },
+          reject: {
+            title: "ผลกระทบ: ศิลปินย้ายแพลตฟอร์ม",
+            description: "ศิลปินย้ายไปขายในตลาดที่ไม่เข้มงวด ส่งผลเสียต่อภาพลักษณ์แพลตฟอร์มที่ถูกมองว่าไม่สนับสนุนศิลปินหน้าใหม่",
+            credibilityChange: -5,
+            type: "neutral"
+          },
+          permission: {
+            title: "ผลกระทบ: ไม่ได้รับการตอบกลับ",
+            description: "Studio Ghibli ไม่ตอบกลับคำขอ ศิลปินรอนานจนสูญเสียโอกาสทางการตลาด แต่แสดงให้เห็นถึงความพยายามทำตามขั้นตอนที่ถูกต้อง",
+            credibilityChange: 3,
+            type: "neutral"
+          },
+          legal: {
+            title: "ผลกระทบ: คดีตัวอย่างทางกฎหมาย",
+            description: "คดีนี้กลายเป็นกรณีศึกษาในศาลเกี่ยวกับ AI Art ผลตัดสินยังไม่ชัดเจน แต่สร้างบรรทัดฐานใหม่สำหรับอุตสาหกรรม",
+            credibilityChange: 0,
+            type: "positive"
+          }
+        }
+      },
+      {
+        id: 3,
+        title: "เพลงคัฟเวอร์ TikTok ไวรัล",
+        category: "ลิขสิทธิ์เพลง",
+        description: "ครีเอเตอร์ทำคลิปร้องเพลงฮิตของศิลปิน K-pop พร้อมเต้นประกอบ คลิปมียอดวิว 50 ล้านและมีสปอนเซอร์ติดต่อเข้ามา",
+        evidence: [
+          "ร้องเพลงต้นฉบับเต็มเพลง",
+          "ได้รับรายได้จากสปอนเซอร์",
+          "ไม่ได้ขออนุญาตจากค่ายเพลง"
+        ],
+        visual: "🎤📱",
+        visualBg: "from-pink-900/30 to-red-950/50",
+        risks: { copyright: 75, trademark: 20, lawsuit: 50 },
+        baseRisk: 55,
+        aiAnalysis: "การคัฟเวอร์เพลงโดยทั่วไปต้องได้รับอนุญาต แต่หลายค่ายเพลง K-pop มีนโยบายยืดหยุ่นสำหรับ UGC ที่ไม่ใช่เชิงพาณิชย์ การรับสปอนเซอร์อาจเปลี่ยนสถานะเป็นการใช้เชิงพาณิชย์",
+        outcomes: {
+          approve: {
+            title: "ผลกระทบ: ค่ายเพลงเรียกร้องส่วนแบ่ง",
+            description: "ค่ายเพลงส่งหนังสือเรียกร้อง 80% ของรายได้จากสปอนเซอร์ ครีเอเตอร์ต้องจ่ายย้อนหลังและทำสัญญาแบ่งรายได้ในอนาคต",
+            credibilityChange: -8,
+            type: "negative"
+          },
+          warn: {
+            title: "ผลกระทบ: การเจรจาสำเร็จ",
+            description: "ครีเอเตอร์ติดต่อค่ายเพลงโดยสมัครใจ ได้รับข้อตกลงแบ่งรายได้ที่เป็นธรรม และโอกาสร่วมงานในอนาคต",
+            credibilityChange: 8,
+            type: "positive"
+          },
+          reject: {
+            title: "ผลกระทบ: คลิปถูกลบ",
+            description: "คลิปถูก takedown ครีเอเตอร์สูญเสียผู้ติดตามจำนวนมาก สปอนเซอร์ยกเลิกสัญญา ส่งผลกระทบต่ออาชีพระยะยาว",
+            credibilityChange: -3,
+            type: "neutral"
+          },
+          permission: {
+            title: "ผลกระทบ: ได้รับลิขสิทธิ์อย่างเป็นทางการ",
+            description: "ค่ายเพลงเห็นศักยภาพและมอบลิขสิทธิ์อย่างเป็นทางการ พร้อมเชิญร่วมงานโปรโมทศิลปิน กลายเป็น win-win situation",
+            credibilityChange: 10,
+            type: "positive"
+          },
+          legal: {
+            title: "ผลกระทบ: คดีเล็กน้อยแต่ยาวนาน",
+            description: "ค่ายเพลงฟ้องเรียกค่าเสียหายเล็กน้อย แต่กระบวนการทางกฎหมายทำให้ครีเอเตอร์ไม่สามารถทำงานได้ตามปกติเป็นเวลาหลายเดือน",
+            credibilityChange: -12,
+            type: "negative"
+          }
+        }
+      },
+      {
+        id: 4,
+        title: "งาน Fanart ตัวละคร Marvel ขายใน Etsy",
+        category: "ลิขสิทธิ์ตัวละคร",
+        description: "ศิลปินวาด Fanart ตัวละคร Spider-Man และ Iron Man ในสไตล์ตัวเอง และนำไปขายเป็นโปสเตอร์และสติกเกอร์ใน Etsy",
+        evidence: [
+          "ใช้ตัวละครที่มีลิขสิทธิ์ของ Marvel/Disney",
+          "ขายในราคา 200-500 บาทต่อชิ้น",
+          "มียอดขายมากกว่า 1,000 ชิ้น"
+        ],
+        visual: "🦸‍♂️🎨",
+        visualBg: "from-red-900/30 to-blue-950/50",
+        risks: { copyright: 90, trademark: 70, lawsuit: 65 },
+        baseRisk: 75,
+        aiAnalysis: "Disney/Marvel มีชื่อเสียงในการปกป้อง IP อย่างเข้มงวด แม้ว่า Fanart จะเป็นวัฒนธรรมที่ได้รับการยอมรับ แต่การนำไปขายเป็นการละเมิดลิขสิทธิ์ที่ชัดเจน ความเสี่ยงสูงมาก",
+        outcomes: {
+          approve: {
+            title: "ผลกระทบ: Disney ดำเนินการทางกฎหมาย",
+            description: "Disney ส่งหนังสือ cease and desist พร้อมเรียกค่าเสียหาย ร้านค้าใน Etsy ถูกปิด และศิลปินถูกขึ้นบัญชีดำ",
+            credibilityChange: -20,
+            type: "negative"
+          },
+          warn: {
+            title: "ผลกระทบ: การถอนสินค้าโดยสมัครใจ",
+            description: "ศิลปินยอมถอนสินค้าและเปลี่ยนไปวาดตัวละครต้นฉบับ หลีกเลี่ยงปัญหาทางกฎหมายแต่สูญเสียรายได้",
+            credibilityChange: 5,
+            type: "neutral"
+          },
+          reject: {
+            title: "ผลกระทบ: ศิลปินผิดหวังแต่ปลอดภัย",
+            description: "ศิลปินไม่พอใจกับการตัดสินใจ แต่ต่อมาขอบคุณหลังจากเห็นกรณีอื่นถูกฟ้องร้องหนัก",
+            credibilityChange: 3,
+            type: "positive"
+          },
+          permission: {
+            title: "ผลกระทบ: Disney ปฏิเสธ",
+            description: "Disney ปฏิเสธคำขออนุญาตตามนโยบายมาตรฐาน แต่ไม่ดำเนินคดีเพราะเห็นความพยายามทำถูกต้อง ศิลปินต้องหาทางอื่น",
+            credibilityChange: 5,
+            type: "neutral"
+          },
+          legal: {
+            title: "ผลกระทบ: คดีไม่คุ้มค่า",
+            description: "การดำเนินคดีกับศิลปินรายย่อยถูกมองว่าเป็นการใช้ทรัพยากรเกินความจำเป็น Disney อาจดำเนินการเองอยู่แล้ว",
+            credibilityChange: -8,
+            type: "negative"
+          }
+        }
+      },
+      {
+        id: 5,
+        title: "เกมมือถือที่เลียนแบบ Wordle",
+        category: "กลไกเกม",
+        description: "นักพัฒนาสร้างเกมทายคำภาษาไทยที่มีกลไกเหมือน Wordle ทุกประการ รวมถึงระบบสี และจำกัด 1 คำต่อวัน",
+        evidence: [
+          "กลไกเกมเหมือนกัน 100%",
+          "ใช้ระบบสีเขียว-เหลือง-เทาเหมือนกัน",
+          "มี in-app purchase และโฆษณา"
+        ],
+        visual: "🟩🟨⬜",
+        visualBg: "from-green-900/30 to-gray-950/50",
+        risks: { copyright: 35, trademark: 25, lawsuit: 30 },
+        baseRisk: 30,
+        aiAnalysis: "กลไกเกมโดยทั่วไปไม่สามารถมีลิขสิทธิ์ได้ แต่การเลียนแบบทั้งหมดอาจถูกมองว่าเป็นการแข่งขันที่ไม่เป็นธรรม Wordle ถูกซื้อโดย NYT ซึ่งมีทรัพยากรทางกฎหมาย แต่กลไกเกมเองไม่ได้รับความคุ้มครอง",
+        outcomes: {
+          approve: {
+            title: "ผลกระทบ: การแข่งขันในตลาด",
+            description: "เกมเปิดตัวสำเร็จและได้รับความนิยมในกลุ่มผู้เล่นภาษาไทย NYT ไม่ดำเนินการใดๆ เพราะกลไกเกมไม่มีลิขสิทธิ์",
+            credibilityChange: 3,
+            type: "positive"
+          },
+          warn: {
+            title: "ผลกระทบ: การสร้างความแตกต่าง",
+            description: "นักพัฒนาเพิ่มฟีเจอร์ใหม่ที่แตกต่าง เช่น โหมดหลายผู้เล่น ทำให้เกมมีเอกลักษณ์มากขึ้นและประสบความสำเร็จ",
+            credibilityChange: 5,
+            type: "positive"
+          },
+          reject: {
+            title: "ผลกระทบ: นักพัฒนาไม่พอใจ",
+            description: "นักพัฒนาโต้แย้งว่าการปฏิเสธไม่มีเหตุผลทางกฎหมายรองรับ เนื่องจากกลไกเกมไม่มีลิขสิทธิ์ ส่งผลให้เสียชื่อเสียง",
+            credibilityChange: -10,
+            type: "negative"
+          },
+          permission: {
+            title: "ผลกระทบ: การเจรจาไม่จำเป็น",
+            description: "NYT ตอบกลับว่าไม่จำเป็นต้องขออนุญาตเพราะกลไกเกมไม่มีลิขสิทธิ์ แต่ขอให้ไม่ใช้ชื่อ Wordle",
+            credibilityChange: 5,
+            type: "neutral"
+          },
+          legal: {
+            title: "ผลกระทบ: คดีไม่มีมูล",
+            description: "การดำเนินคดีล้มเหลวเพราะกลไกเกมไม่ได้รับความคุ้มครองทางกฎหมาย เสียทรัพยากรและเวลาโดยไม่จำเป็น",
+            credibilityChange: -15,
+            type: "negative"
+          }
+        }
+      },
+      {
+        id: 6,
+        title: "ฟอนต์ฟรีจากเว็บไซต์ไม่ชัดเจน",
+        category: "ลิขสิทธิ์ฟอนต์",
+        description: "บริษัทโฆษณาใช้ฟอนต์ที่ดาวน์โหลดจากเว็บไซต์ฟอนต์ฟรี แต่ในเงื่อนไขระบุว่า 'ใช้ส่วนตัวเท่านั้น' สำหรับงานโฆษณาทีวี",
+        evidence: [
+          "ไลเซนส์ระบุ 'Personal Use Only'",
+          "ใช้ในงานโฆษณาเชิงพาณิชย์",
+          "โฆษณาออกอากาศแล้ว"
+        ],
+        visual: "🔤💼",
+        visualBg: "from-gray-800/30 to-gray-950/50",
+        risks: { copyright: 70, trademark: 10, lawsuit: 55 },
+        baseRisk: 50,
+        aiAnalysis: "การละเมิดไลเซนส์ฟอนต์เป็นกรณีที่พบบ่อยและมักถูกมองข้าม ผู้สร้างฟอนต์หลายรายมีการติดตามการใช้งาน ค่าปรับอาจสูงถึงหลักแสนบาทต่อฟอนต์",
+        outcomes: {
+          approve: {
+            title: "ผลกระทบ: ผู้สร้างฟอนต์เรียกค่าเสียหาย",
+            description: "ผู้สร้างฟอนต์พบการใช้งานและเรียกร้องค่าลิขสิทธิ์ย้อนหลัง 150,000 บาท พร้อมค่าเสียหายเพิ่มเติม",
+            credibilityChange: -12,
+            type: "negative"
+          },
+          warn: {
+            title: "ผลกระทบ: การซื้อไลเซนส์",
+            description: "บริษัทติดต่อซื้อไลเซนส์เชิงพาณิชย์ทันที ผู้สร้างฟอนต์พอใจและไม่เรียกร้องค่าเสียหายเพิ่มเติม",
+            credibilityChange: 8,
+            type: "positive"
+          },
+          reject: {
+            title: "ผลกระทบ: โฆษณาต้องถูกถอน",
+            description: "โฆษณาที่ออกอากาศแล้วต้องถูกถอน บริษัทเสียค่าใช้จ่ายในการแก้ไขและออกอากาศใหม่",
+            credibilityChange: 0,
+            type: "neutral"
+          },
+          permission: {
+            title: "ผลกระทบ: ข้อตกลงที่ดี",
+            description: "ผู้สร้างฟอนต์ยินดีมอบไลเซนส์เชิงพาณิชย์ในราคาพิเศษ พร้อมโอกาสร่วมงานในอนาคต",
+            credibilityChange: 10,
+            type: "positive"
+          },
+          legal: {
+            title: "ผลกระทบ: ค่าใช้จ่ายเกินจำเป็น",
+            description: "การดำเนินคดีมีค่าใช้จ่ายสูงกว่าการซื้อไลเซนส์หลายเท่า ทั้งสองฝ่ายเสียเวลาและทรัพยากร",
+            credibilityChange: -8,
+            type: "negative"
+          }
+        }
+      },
+      {
+        id: 7,
+        title: "แอป AI แปลงเสียงเป็นศิลปินดัง",
+        category: "สิทธิ์ในเสียง",
+        description: "แอปใหม่ใช้ AI แปลงเสียงผู้ใช้ให้คล้ายกับนักร้องชื่อดัง โดยไม่ได้รับอนุญาตจากศิลปินเหล่านั้น",
+        evidence: [
+          "ใช้ชื่อศิลปินในการโปรโมท",
+          "ฝึก AI จากเพลงต้นฉบับ",
+          "เก็บค่าบริการรายเดือน"
+        ],
+        visual: "🎙️🤖",
+        visualBg: "from-purple-900/30 to-pink-950/50",
+        risks: { copyright: 85, trademark: 60, lawsuit: 75 },
+        baseRisk: 75,
+        aiAnalysis: "สิทธิ์ในเสียงและภาพลักษณ์เป็นประเด็นใหม่ที่กฎหมายยังไม่ชัดเจน แต่หลายประเทศเริ่มมีบรรทัดฐาน ศิลปินหลายคนได้ดำเนินคดีกับแอปลักษณะนี้แล้ว",
+        outcomes: {
+          approve: {
+            title: "ผลกระทบ: ศิลปินหลายรายฟ้องร้อง",
+            description: "ศิลปิน 5 รายรวมตัวฟ้องร้องแอป เรียกค่าเสียหายรวม 50 ล้านบาท แอปต้องปิดตัวและผู้ก่อตั้งถูกฟ้องเป็นการส่วนตัว",
+            credibilityChange: -20,
+            type: "negative"
+          },
+          warn: {
+            title: "ผลกระทบ: การปรับโมเดลธุรกิจ",
+            description: "แอปเปลี่ยนมาใช้เฉพาะเสียงสังเคราะห์ที่สร้างขึ้นใหม่ ไม่อิงศิลปินจริง ธุรกิจดำเนินต่อได้แต่ลดความน่าสนใจ",
+            credibilityChange: 5,
+            type: "neutral"
+          },
+          reject: {
+            title: "ผลกระทบ: ป้องกันปัญหาใหญ่",
+            description: "แอปถูกบังคับปิดก่อนเปิดตัว ผู้ก่อตั้งผิดหวังแต่หลีกเลี่ยงคดีความมูลค่ามหาศาล",
+            credibilityChange: 5,
+            type: "positive"
+          },
+          permission: {
+            title: "ผลกระทบ: ศิลปินบางรายสนใจ",
+            description: "ศิลปินบางรายเห็นโอกาสทางธุรกิจและยินดีร่วมงานอย่างเป็นทางการ แอปเปิดตัวกับศิลปินพาร์ทเนอร์",
+            credibilityChange: 12,
+            type: "positive"
+          },
+          legal: {
+            title: "ผลกระทบ: คดีตัวอย่างระดับประเทศ",
+            description: "คดีนี้กลายเป็นบรรทัดฐานสำคัญสำหรับ AI และสิทธิ์ในเสียง แม้ใช้เวลานานแต่ส่งผลดีต่ออุตสาหกรรมในระยะยาว",
+            credibilityChange: 5,
+            type: "positive"
+          }
+        }
+      },
+      {
+        id: 8,
+        title: "มีม Template ที่มีรูปดารา",
+        category: "สิทธิ์ส่วนบุคคล",
+        description: "เว็บไซต์สร้างมีมใช้รูปดาราฮอลลีวูดเป็น template โดยไม่ได้รับอนุญาต ผู้ใช้สามารถเพิ่มข้อความและดาวน์โหลดฟรี",
+        evidence: [
+          "ใช้รูปดาราโดยไม่ได้รับอนุญาต",
+          "เว็บไซต์มีรายได้จากโฆษณา",
+          "มีผู้ใช้หลายล้านคนต่อเดือน"
+        ],
+        visual: "😂🖼️",
+        visualBg: "from-yellow-900/30 to-orange-950/50",
+        risks: { copyright: 50, trademark: 40, lawsuit: 45 },
+        baseRisk: 45,
+        aiAnalysis: "การใช้รูปบุคคลมีชื่อเสียงอาจเข้าข่ายละเมิดสิทธิ์ส่วนบุคคลและ Right of Publicity อย่างไรก็ตาม มีมถูกมองว่าเป็น Fair Use ในหลายกรณี ขึ้นอยู่กับการนำไปใช้",
+        outcomes: {
+          approve: {
+            title: "ผลกระทบ: ดาราบางรายดำเนินการ",
+            description: "ดาราบางคนส่งหนังสือ cease and desist เว็บไซต์ต้องลบ template บางส่วนแต่ยังดำเนินการต่อได้",
+            credibilityChange: -5,
+            type: "neutral"
+          },
+          warn: {
+            title: "ผลกระทบ: การปรับปรุงนโยบาย",
+            description: "เว็บไซต์เพิ่มข้อจำกัดและคำเตือนเรื่องการใช้งาน ลดความเสี่ยงทางกฎหมายขณะที่ยังให้บริการได้",
+            credibilityChange: 5,
+            type: "positive"
+          },
+          reject: {
+            title: "ผลกระทบ: ผู้ใช้ไม่พอใจ",
+            description: "การปฏิเสธถูกมองว่าเข้มงวดเกินไป เนื่องจากมีมเป็นส่วนหนึ่งของวัฒนธรรมอินเทอร์เน็ตที่ได้รับการยอมรับ",
+            credibilityChange: -8,
+            type: "negative"
+          },
+          permission: {
+            title: "ผลกระทบ: บางรายตกลง",
+            description: "ดาราบางคนอนุญาตอย่างเป็นทางการ ทำให้เว็บไซต์มี 'Licensed Memes' ที่ถูกกฎหมาย",
+            credibilityChange: 8,
+            type: "positive"
+          },
+          legal: {
+            title: "ผลกระทบ: คดีซับซ้อน",
+            description: "คดี Fair Use vs Right of Publicity ซับซ้อนและใช้เวลานาน ทั้งสองฝ่ายเสียทรัพยากรมาก",
+            credibilityChange: -5,
+            type: "neutral"
+          }
+        }
+      }
+    ];
+    
+    const decisions = [
+      { id: 'approve', label: 'อนุญาตให้ใช้', icon: '✓', color: 'green', desc: 'อนุญาตให้ดำเนินการได้' },
+      { id: 'warn', label: 'เตือนเรื่องสิทธิ์', icon: '⚠', color: 'yellow', desc: 'แจ้งเตือนความเสี่ยง' },
+      { id: 'reject', label: 'ปฏิเสธการใช้งาน', icon: '✕', color: 'red', desc: 'ไม่อนุญาตให้ดำเนินการ' },
+      { id: 'permission', label: 'ขออนุญาตเจ้าของสิทธิ์', icon: '📝', color: 'blue', desc: 'แนะนำให้ติดต่อเจ้าของ' },
+      { id: 'legal', label: 'ดำเนินการทางกฎหมาย', icon: '⚖', color: 'purple', desc: 'ใช้มาตรการทางกฎหมาย' }
+    ];
+    
+    // ==================== GAME STATE ====================
     let gameState = {
-      running: false,
-      paused: false,
-      time: 0,
-      ownership: 100,
-      usedTools: new Set(),
-      eventIndex: 0,
-      timerInterval: null,
-      visualDegradation: 0
+      currentCase: 0,
+      credibility: 100,
+      aiUsesLeft: 3,
+      stats: {
+        approved: 0,
+        warned: 0,
+        rejected: 0,
+        permission: 0,
+        legal: 0
+      },
+      decisions: []
     };
-
-    // Base timeline events
-    const baseEvents = [
-      {
-        time: 0,
-        text: "คุณเผยแพร่ผลงานของคุณบนอินเทอร์เน็ต ด้วยความภาคภูมิใจและความหวัง",
-        type: "normal",
-        visual: "pristine"
-      }
-    ];
-
-    // Random violation events pool
-    const violationPool = [
-      {
-        text: "มีคนแชร์ผลงานของคุณบน Facebook โดยครอปชื่อออก ได้ไลก์ 50,000 ครั้ง",
-        type: "violation",
-        impact: -6,
-        visual: "fade"
-      },
-      {
-        text: "ร้านกาแฟใช้ภาพของคุณตกแต่งผนัง คุณไปเจอเข้าตอนซื้อกาแฟ แต่ไม่มีใครรู้ว่าคุณคือคนวาด",
-        type: "violation",
-        impact: -8,
-        visual: "desaturate"
-      },
-      {
-        text: "นักเรียนศิลปะส่งผลงานของคุณเป็นการบ้าน ได้เกรด A และคำชมจากอาจารย์",
-        type: "violation",
-        impact: -7,
-        visual: "fade"
-      },
-      {
-        text: "บริษัทโฆษณาใช้ภาพของคุณโฆษณาสินค้า งบโฆษณา 2 ล้านบาท คุณไม่ได้อะไรเลย",
-        type: "violation",
-        impact: -12,
-        visual: "commercial"
-      },
-      {
-        text: "ผลงานของคุณถูกพิมพ์ลงเสื้อและขายบน Shopee ราคา 299 บาท ขายไปแล้ว 500 ตัว",
-        type: "violation",
-        impact: -10,
-        visual: "desaturate"
-      },
-      {
-        text: "Influencer โพสต์ภาพคุณพร้อมข้อความ 'ภาพที่ชอบ ❤️' ไม่มีเครดิต มีคนเห็น 200,000 คน",
-        type: "violation",
-        impact: -9,
-        visual: "fade"
-      },
-      {
-        text: "มีคนใช้ AI ปรับแต่งภาพของคุณ อ้างว่าเป็น 'ผลงานร่วม' ระหว่างเขากับ AI",
-        type: "violation",
-        impact: -11,
-        visual: "distort"
-      },
-      {
-        text: "เว็บข่าวใช้ภาพคุณประกอบบทความโดยไม่ขออนุญาต อ้างว่า 'พบในอินเทอร์เน็ต'",
-        type: "violation",
-        impact: -7,
-        visual: "fade"
-      },
-      {
-        text: "คนทำ NFT นำภาพคุณไป mint ขายได้ 0.5 ETH คุณรู้เรื่องทีหลัง ทำอะไรไม่ได้แล้ว",
-        type: "violation",
-        impact: -13,
-        visual: "commercial"
-      },
-      {
-        text: "มีคนดัดแปลงผลงานคุณเป็นสติกเกอร์ LINE ขายชุดละ 30 บาท ยอดขายติดอันดับ",
-        type: "violation",
-        impact: -10,
-        visual: "commercial"
-      },
-      {
-        text: "โรงพิมพ์เอาภาพคุณทำเป็นโปสเตอร์แจกฟรีในงานอีเวนต์ 10,000 ใบ",
-        type: "violation",
-        impact: -8,
-        visual: "desaturate"
-      },
-      {
-        text: "บริษัทเกมมือถือใช้ภาพคุณเป็น loading screen โดยไม่แจ้ง เกมมีคนเล่น 1 ล้านคน",
-        type: "violation",
-        impact: -14,
-        visual: "commercial"
-      },
-      {
-        text: "ช่อง YouTube รีวิวงานศิลปะ วิจารณ์ผลงานคุณ 20 นาที แต่ระบุชื่อผิดตลอดคลิป",
-        type: "violation",
-        impact: -9,
-        visual: "fade"
-      },
-      {
-        text: "มีคนทำวอลเปเปอร์มือถือจากภาพคุณ อัปโหลดเว็บดาวน์โหลดฟรี มีคนโหลด 50,000 ครั้ง",
-        type: "violation",
-        impact: -6,
-        visual: "fade"
-      },
-      {
-        text: "ผู้คนเริ่มจำภาพได้ แต่ไม่รู้จักชื่อคุณ ผลงานกลายเป็น 'ภาพที่เค้าเห็นที่ไหนสักแห่ง'",
-        type: "violation",
-        impact: -10,
-        visual: "desaturate"
-      },
-      {
-        text: "เพื่อนของคุณส่งภาพผลงานคุณมาให้คุณดู บอกว่า 'เจ๋งมากเลย ไม่รู้ใครวาด'",
-        type: "violation",
-        impact: -11,
-        visual: "fade"
-      },
-      {
-        text: "มีคนถามใน subreddit ว่า 'ใครรู้จักศิลปินภาพนี้บ้าง' มี 50 comments แต่ไม่มีใครรู้",
-        type: "violation",
-        impact: -8,
-        visual: "fade"
-      },
-      {
-        text: "Gallery ท้องถิ่นแขวนภาพคุณในนิทรรศการ แต่ใส่ป้าย 'ศิลปินไม่ระบุตัวตน'",
-        type: "violation",
-        impact: -12,
-        visual: "desaturate"
-      },
-      {
-        text: "บริษัทพิมพ์ปฏิทินใช้ภาพคุณเป็นเดือนมีนาคม จัดจำหน่ายทั่วประเทศ",
-        type: "violation",
-        impact: -9,
-        visual: "commercial"
-      },
-      {
-        text: "Pinterest เต็มไปด้วยภาพของคุณ ทุกภาพชี้ไปที่ลิงก์ต่างๆ แต่ไม่มีลิงก์ไหนชี้ไปหาคุณ",
-        type: "violation",
-        impact: -7,
-        visual: "fade"
-      }
-    ];
-
-    let events = [
-      {
-        time: 0,
-        text: "คุณเผยแพร่ผลงานของคุณบนอินเทอร์เน็ต ด้วยความภาคภูมิใจและความหวัง",
-        type: "normal"
-      },
-      {
-        time: 3,
-        text: "มีคนแชร์ผลงานของคุณโดยไม่ระบุที่มา ผลงานเริ่มแพร่กระจาย",
-        type: "violation",
-        impact: -5
-      },
-      {
-        time: 7,
-        text: "บริษัทโฆษณาขนาดเล็กนำภาพของคุณไปใช้ในแคมเปญโดยไม่ขออนุญาต",
-        type: "violation",
-        impact: -8
-      },
-      {
-        time: 12,
-        text: "ผลงานของคุณถูกพิมพ์ลงเสื้อและขายออนไลน์ โดยผู้ขายอ้างว่าเป็นผลงานของตน",
-        type: "violation",
-        impact: -10
-      },
-      {
-        time: 18,
-        text: "มีคนดัดแปลงภาพของคุณและอ้างว่าสร้างขึ้นเอง ได้รับความสนใจมากกว่าผลงานต้นฉบับ",
-        type: "violation",
-        impact: -12
-      },
-      {
-        time: 25,
-        text: "บริษัทขนาดใหญ่ใช้ผลงานของคุณในการนำเสนองาน โดยไม่มีการติดต่อใดๆ",
-        type: "violation",
-        impact: -15
-      },
-      {
-        time: 33,
-        text: "ผู้คนเริ่มจำภาพได้ แต่ไม่รู้จักชื่อคุณ ผลงานกลายเป็นสมบัติสาธารณะในสายต่อของคนทั่วไป",
-        type: "violation",
-        impact: -10
-      },
-      {
-        time: 42,
-        text: "มีคนถามคุณว่าทำไมถึงลอกเลียนผลงานคนอื่น ทั้งที่นั่นคือผลงานของคุณเอง",
-        type: "violation",
-        impact: -8
-      },
-      {
-        time: 50,
-        text: "ผลงานของคุณถูกใช้ในหลากหลายบริบท บางที่เหมาะสม บางที่ไม่เคารพต้นฉบับ",
-        type: "violation",
-        impact: -7
-      }
-    ];
-
-    let event = [];
-
-    // Generate random timeline with violations
-    function generateRandomTimeline() {
-      events = [...baseEvents];
-      
-      // Shuffle violations
-      const shuffled = [...violationPool].sort(() => Math.random() - 0.5);
-      
-      // Select 9 violations
-      const selectedViolations = shuffled.slice(0, 9);
-      
-      // Assign random times between 3-57 seconds
-      const times = [];
-      for (let i = 0; i < 9; i++) {
-        times.push(3 + Math.floor(Math.random() * 54));
-      }
-      times.sort((a, b) => a - b);
-      
-      // Add violations with assigned times
-      selectedViolations.forEach((violation, index) => {
-        events.push({
-          time: times[index],
-          ...violation
-        });
-      });
-      
-      // Sort by time
-      events.sort((a, b) => a.time - b.time);
-    }
-
-    function updateUIFromConfig() {
-      const config = window.elementSdk ? window.elementSdk.config : {};
-      document.getElementById('creationTitle').textContent = config.creation_name || defaultConfig.creation_name;
-      document.getElementById('creatorName').textContent = config.creator_name || defaultConfig.creator_name;
-      document.getElementById('creationMeta').textContent = config.creation_type || defaultConfig.creation_type;
-    }
-
-    function updateOwnershipBar() {
-      const bar = document.getElementById('ownershipBar');
-      const status = document.getElementById('ownershipStatus');
-      
-      bar.style.width = gameState.ownership + '%';
-      bar.textContent = gameState.ownership + '%';
-
-      if (gameState.ownership <= 30) {
-        bar.classList.add('critical');
-      } else {
-        bar.classList.remove('critical');
-      }
-
-      if (gameState.ownership >= 90) {
-        status.textContent = 'ผลงานอยู่ภายในการควบคุมของคุณอย่างสมบูรณ์';
-      } else if (gameState.ownership >= 70) {
-        status.textContent = 'คุณยังคงมีสิทธิ์เหนือผลงานส่วนใหญ่';
-      } else if (gameState.ownership >= 50) {
-        status.textContent = 'ผลงานกำลังหลุดมือของคุณเรื่อยๆ';
-      } else if (gameState.ownership >= 30) {
-        status.textContent = 'คุณกำลังสูญเสียการควบคุมผลงานของคุณ';
-      } else if (gameState.ownership > 0) {
-        status.textContent = 'ผลงานเกือบจะไม่ได้เป็นของคุณอีกต่อไป...';
-      } else {
-        status.textContent = 'ผลงานไม่ได้เป็นของคุณอีกแล้ว';
-      }
-    }
-
-    function addEvent(eventData) {
-      const eventsList = document.getElementById('eventsList');
-      const eventItem = document.createElement('div');
-      eventItem.className = 'event-item' + (eventData.type === 'violation' ? ' violation' : '');
-      
-      const minutes = Math.floor(gameState.time / 60);
-      const seconds = gameState.time % 60;
-      const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      
-      eventItem.innerHTML = `
-        <div class="event-time">${timeStr}</div>
-        <div class="event-content">${eventData.text}</div>
-      `;
-      
-      eventsList.appendChild(eventItem);
-      
-      setTimeout(() => {
-        eventItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 100);
-
-      if (eventData.impact) {
-        gameState.ownership = Math.max(0, gameState.ownership + eventData.impact);
-        updateOwnershipBar();
-      }
-
-      // Apply visual degradation
-      if (eventData.visual && eventData.visual !== 'pristine') {
-        applyVisualDegradation(eventData.visual);
-      }
-    }
-
-    function applyVisualDegradation(visualType) {
-      const svg = document.getElementById('artworkSVG');
-      const frame = document.getElementById('artworkFrame');
-      const overlay = document.getElementById('degradationOverlay');
-      const caption = document.getElementById('artworkCaption');
-      
-      gameState.visualDegradation++;
-      
-      // Progressive degradation effects
-      const degradationLevel = gameState.visualDegradation;
-      
-      if (degradationLevel >= 1) {
-        frame.classList.add('degrading');
-        overlay.classList.add('active');
-      }
-      
-      if (visualType === 'fade' || visualType === 'desaturate') {
-        const currentOpacity = parseFloat(svg.style.opacity || 1);
-        svg.style.opacity = Math.max(0.3, currentOpacity - 0.08);
-        
-        if (visualType === 'desaturate') {
-          const currentFilter = svg.style.filter || '';
-          const currentSat = parseFloat(currentFilter.match(/saturate\(([\d.]+)\)/)?.[1] || 1);
-          svg.style.filter = `saturate(${Math.max(0.2, currentSat - 0.12)})`;
-        }
-      }
-      
-      if (visualType === 'commercial') {
-        overlay.style.opacity = Math.min(1, parseFloat(overlay.style.opacity || 0) + 0.15);
-      }
-      
-      if (visualType === 'distort') {
-        const currentFilter = svg.style.filter || '';
-        svg.style.filter = currentFilter + ' blur(0.5px)';
-      }
-      
-      // Update caption based on degradation
-      if (degradationLevel <= 2) {
-        caption.textContent = 'ผลงานเริ่มแพร่กระจาย...';
-        caption.classList.add('violated');
-      } else if (degradationLevel <= 4) {
-        caption.textContent = 'มีคนใช้งานโดยไม่ขออนุญาต';
-        caption.classList.add('violated');
-      } else if (degradationLevel <= 6) {
-        caption.textContent = 'คุณกำลังสูญเสียการควบคุม';
-        caption.classList.add('violated');
-      } else {
-        caption.textContent = 'ผลงานไม่ได้เป็นของคุณอีกต่อไป';
-        caption.classList.add('violated');
-      }
-    }
-
-    function useTool(toolType) {
-      if (gameState.usedTools.has(toolType)) {
-        return;
-      }
-
-      gameState.usedTools.add(toolType);
-
-      let eventText = '';
-      let ownershipGain = 0;
-
-      switch(toolType) {
-        case 'dmca':
-          eventText = 'คุณส่ง DMCA Takedown Notice ผลงานบางส่วนถูกลบออกจากแพลตฟอร์ม แต่คนอื่นก็อัปโหลดใหม่';
-          ownershipGain = 8;
-          break;
-        case 'cease':
-          eventText = 'คุณส่งจดหมาย Cease & Desist ผู้ละเมิดบางรายหยุดใช้ แต่หลายคนเพิกเฉย';
-          ownershipGain = 6;
-          break;
-        case 'license':
-          eventText = 'คุณเสนอใบอนุญาตราคาถูก บางคนยอมจ่าย แต่ส่วนใหญ่เลือกใช้ฟรีต่อไป';
-          ownershipGain = 10;
-          break;
-        case 'lawsuit':
-          eventText = 'คุณฟ้องร้องผู้ละเมิดรายใหญ่ ชนะคดีและได้ค่าเสียหาย แต่ผลงานยังคงถูกใช้โดยคนอื่นๆ';
-          ownershipGain = 15;
-          break;
-        case 'watermark':
-          eventText = 'คุณเพิ่มลายน้ำในผลงานใหม่ ช่วยป้องกันการลอกในอนาคต แต่ผลงานเก่ายังคงถูกใช้อยู่';
-          ownershipGain = 7;
-          break;
-        case 'negotiate':
-          eventText = 'คุณเจรจากับผู้ใช้งานหลายราย บางคนยอมตกลง แต่ไม่อาจติดตามทุกคนได้';
-          ownershipGain = 5;
-          break;
-      }
-
-      gameState.ownership = Math.min(100, gameState.ownership + ownershipGain);
-      updateOwnershipBar();
-      
-      addEvent({
-        text: eventText,
-        type: 'action'
-      });
-
-      const button = document.getElementById('tool' + 
-        ({dmca: 1, cease: 2, license: 3, lawsuit: 4, watermark: 5, negotiate: 6}[toolType]));
-      button.disabled = true;
-      button.classList.add('used');
-    }
-
-    function gameLoop() {
-      if (!gameState.running || gameState.paused) return;
-
-      gameState.time++;
-
-      if (gameState.eventIndex < events.length) {
-        const nextEvent = events[gameState.eventIndex];
-        if (gameState.time >= nextEvent.time) {
-          addEvent(nextEvent);
-          gameState.eventIndex++;
-        }
-      }
-
-      if (gameState.time >= 60 || gameState.eventIndex >= events.length) {
-        endGame();
-      }
-    }
-
-    function endGame() {
-      gameState.running = false;
-      clearInterval(gameState.timerInterval);
-
-      const modal = document.getElementById('gameOverModal');
-      const content = document.getElementById('modalContent');
-      const icon = document.getElementById('modalIcon');
-      const title = document.getElementById('modalTitle');
-      const message = document.getElementById('modalMessage');
-      const finalOwn = document.getElementById('finalOwnership');
-
-      finalOwn.textContent = gameState.ownership + '%';
-
-      if (gameState.ownership >= 80) {
-        content.className = 'modal-content preserved';
-        icon.textContent = '✨';
-        title.textContent = 'ผลงานได้รับการปกป้อง';
-        message.textContent = 'คุณปกป้องสิทธิ์ในผลงานได้เป็นอย่างดี แม้จะต้องต่อสู้อย่างหนัก แต่คุณเป็นเจ้าของยังคงอยู่กับคุณ นี่คือชัยชนะของผู้สร้างสรรค์';
-      } else if (gameState.ownership >= 50) {
-        content.className = 'modal-content preserved';
-        icon.textContent = '🕊️';
-        title.textContent = 'ต่อสู้ไปได้บ้าง';
-        message.textContent = 'คุณพยายามปกป้องสิทธิ์ของตัวเอง แม้ผลงานจะหลุดมือไปบางส่วน แต่คุณยังมีเสียงในการควบคุมมัน การรักษาสิทธิ์ต้องใช้ความพยายามอย่างต่อเนื่อง';
-      } else if (gameState.ownership >= 20) {
-        content.className = 'modal-content lost';
-        icon.textContent = '🥀';
-        title.textContent = 'สูญเสียการควบคุม';
-        message.textContent = 'ผลงานของคุณแพร่กระจายไปทั่ว โดยที่คุณไม่อาจควบคุมได้ คนส่วนใหญ่ไม่รู้ว่าคุณคือผู้สร้าง นี่คือความเจ็บปวดของผู้สร้างสรรค์ที่ถูกลืม';
-      } else {
-        content.className = 'modal-content lost';
-        icon.textContent = '💔';
-        title.textContent = 'หายไปในความมืด';
-        message.textContent = 'ผลงานของคุณไม่ได้เป็นของคุณอีกต่อไป มันกลายเป็นของทุกคน... และของไม่มีผู้ควบคุม คุณสร้างมัน แต่โลกเอามันไปโดยไม่เคยรู้ว่าคุณคือใคร';
-      }
-
-      modal.classList.add('show');
-    }
-
-    function startGame() {
-      if (gameState.running) return;
-
-      gameState.running = true;
-      gameState.paused = false;
-
-      document.getElementById('startButton').style.display = 'none';
-      document.getElementById('pauseButton').style.display = 'inline-block';
-
-      addEvent(events[0]);
-      gameState.eventIndex = 1;
-
-      gameState.timerInterval = setInterval(gameLoop, 1000);
-    }
-
-    function togglePause() {
-      gameState.paused = !gameState.paused;
-      const pauseBtn = document.getElementById('pauseButton');
-      pauseBtn.textContent = gameState.paused ? 'ดำเนินต่อ' : 'หยุดชั่วคราว';
-    }
-
-    function resetGame() {
-      clearInterval(gameState.timerInterval);
-
-      gameState = {
-        running: false,
-        paused: false,
-        time: 0,
-        ownership: 100,
-        usedTools: new Set(),
-        eventIndex: 0,
-        timerInterval: null,
-        visualDegradation: 0
-      };
-
-      // Reset visuals
-      const svg = document.getElementById('artworkSVG');
-      const frame = document.getElementById('artworkFrame');
-      const overlay = document.getElementById('degradationOverlay');
-      const watermark = document.getElementById('watermarkOverlay');
-      const caption = document.getElementById('artworkCaption');
-      
-      svg.style.opacity = '1';
-      svg.style.filter = '';
-      frame.classList.remove('degrading');
-      overlay.classList.remove('active');
-      overlay.style.opacity = '';
-      watermark.classList.remove('active');
-      watermark.textContent = '';
-      caption.textContent = 'ผลงานต้นฉบับ — สมบูรณ์และบริสุทธิ์';
-      caption.classList.remove('violated');
-
-      document.getElementById('eventsList').innerHTML = '';
-      document.getElementById('gameOverModal').classList.remove('show');
-      document.getElementById('startButton').style.display = 'inline-block';
-      document.getElementById('pauseButton').style.display = 'none';
-
-      const toolButtons = document.querySelectorAll('.tool-button');
-      toolButtons.forEach(btn => {
-        btn.disabled = false;
-        btn.classList.remove('used');
-      });
-
-      updateOwnershipBar();
-    }
-
-    async function onConfigChange(config) {
-      updateUIFromConfig();
-    }
-
-    async function init() {
-      // Generate random timeline on page load
-      generateRandomTimeline();
-      
+    
+    // ==================== CONFIG ====================
+    const defaultConfig = {
+      game_title: 'IP INSPECTOR',
+      inspector_role: 'ผู้ตรวจการด้านทรัพย์สินทางปัญญา',
+      primary_color: '#dc2626',
+      secondary_color: '#1f2937',
+      text_color: '#f3f4f6',
+      accent_color: '#991b1b',
+      surface_color: '#111827'
+    };
+    
+    let config = { ...defaultConfig };
+    
+    // ==================== SDK INITIALIZATION ====================
+    async function initSDK() {
       if (window.elementSdk) {
-        window.elementSdk.init({
-          defaultConfig: defaultConfig,
-          onConfigChange: onConfigChange,
-          mapToCapabilities: (config) => ({
-            recolorables: [],
+        await window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (newConfig) => {
+            config = { ...defaultConfig, ...newConfig };
+            applyConfig();
+          },
+          mapToCapabilities: (cfg) => ({
+            recolorables: [
+              {
+                get: () => cfg.primary_color || defaultConfig.primary_color,
+                set: (value) => window.elementSdk.setConfig({ primary_color: value })
+              },
+              {
+                get: () => cfg.secondary_color || defaultConfig.secondary_color,
+                set: (value) => window.elementSdk.setConfig({ secondary_color: value })
+              },
+              {
+                get: () => cfg.text_color || defaultConfig.text_color,
+                set: (value) => window.elementSdk.setConfig({ text_color: value })
+              },
+              {
+                get: () => cfg.accent_color || defaultConfig.accent_color,
+                set: (value) => window.elementSdk.setConfig({ accent_color: value })
+              },
+              {
+                get: () => cfg.surface_color || defaultConfig.surface_color,
+                set: (value) => window.elementSdk.setConfig({ surface_color: value })
+              }
+            ],
             borderables: [],
             fontEditable: undefined,
             fontSizeable: undefined
           }),
-          mapToEditPanelValues: (config) => new Map([
-            ["creation_name", config.creation_name || defaultConfig.creation_name],
-            ["creator_name", config.creator_name || defaultConfig.creator_name],
-            ["creation_type", config.creation_type || defaultConfig.creation_type]
+          mapToEditPanelValues: (cfg) => new Map([
+            ['game_title', cfg.game_title || defaultConfig.game_title],
+            ['inspector_role', cfg.inspector_role || defaultConfig.inspector_role]
           ])
         });
+        
+        config = { ...defaultConfig, ...window.elementSdk.config };
       }
-
-      updateUIFromConfig();
-      updateOwnershipBar();
+      
+      applyConfig();
+      initGame();
     }
-
-    init();
+    
+    function applyConfig() {
+      const title = document.getElementById('game-title');
+      const role = document.getElementById('role-title');
+      
+      if (title) title.textContent = config.game_title || defaultConfig.game_title;
+      if (role) role.textContent = config.inspector_role || defaultConfig.inspector_role;
+      
+      // Apply colors
+      document.documentElement.style.setProperty('--primary', config.primary_color || defaultConfig.primary_color);
+      document.documentElement.style.setProperty('--secondary', config.secondary_color || defaultConfig.secondary_color);
+      document.documentElement.style.setProperty('--text', config.text_color || defaultConfig.text_color);
+      
+      // Update credibility bar color
+      const credBar = document.getElementById('credibility-bar');
+      if (credBar) {
+        credBar.style.background = `linear-gradient(to right, ${config.accent_color || defaultConfig.accent_color}, ${config.primary_color || defaultConfig.primary_color})`;
+      }
+    }
+    
+    // ==================== GAME LOGIC ====================
+    function initGame() {
+      renderCase();
+      renderAIUses();
+      updateStats();
+      setupEventListeners();
+    }
+    
+    function renderCase() {
+      const caseData = cases[gameState.currentCase];
+      const container = document.getElementById('case-container');
+      
+      container.innerHTML = `
+        <div class="p-6 animate-slide-in">
+          <!-- Case Header -->
+          <div class="flex items-start justify-between mb-6">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="px-2 py-1 bg-red-900/50 border border-red-700 rounded text-xs mono text-red-400">
+                  CASE #${String(caseData.id).padStart(3, '0')}
+                </span>
+                <span class="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs mono text-gray-400">
+                  ${caseData.category}
+                </span>
+              </div>
+              <h2 class="text-xl font-bold text-white">${caseData.title}</h2>
+            </div>
+            <div class="text-4xl opacity-30">${caseData.visual}</div>
+          </div>
+          
+          <!-- Visual Preview -->
+          <div class="mb-6 p-8 bg-gradient-to-br ${caseData.visualBg} rounded-lg border border-gray-800 flex items-center justify-center">
+            <div class="text-8xl">${caseData.visual}</div>
+          </div>
+          
+          <!-- Description -->
+          <div class="mb-6">
+            <h3 class="text-sm font-medium mono text-gray-400 mb-2">รายละเอียดคดี</h3>
+            <p class="text-gray-300 leading-relaxed">${caseData.description}</p>
+          </div>
+          
+          <!-- Evidence -->
+          <div class="mb-6">
+            <h3 class="text-sm font-medium mono text-gray-400 mb-2">หลักฐาน</h3>
+            <ul class="space-y-2">
+              ${caseData.evidence.map(e => `
+                <li class="flex items-start gap-2 text-sm text-gray-400">
+                  <span class="text-red-500 mt-0.5">▪</span>
+                  <span>${e}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        </div>
+      `;
+      
+      // Update risk meter
+      updateRiskMeter(caseData);
+      
+      // Update case counter
+      document.getElementById('case-counter').textContent = 
+        `${String(gameState.currentCase + 1).padStart(2, '0')}/${String(cases.length).padStart(2, '0')}`;
+      
+      // Render decisions
+      renderDecisions();
+      
+      // Reset AI output
+      document.getElementById('ai-output').innerHTML = `
+        <span class="text-gray-600">[SYSTEM READY]</span><br>
+        <span class="text-gray-600">กดปุ่มวิเคราะห์เพื่อรับคำแนะนำจาก AI</span><br>
+        <span class="text-red-500/50">⚠ การใช้ AI มากเกินไปจะลดความน่าเชื่อถือ</span>
+      `;
+    }
+    
+    function renderDecisions() {
+      const panel = document.getElementById('decision-panel');
+      
+      panel.innerHTML = `
+        <h3 class="text-sm font-medium mono text-gray-400 mb-3">การตัดสินใจของคุณ</h3>
+        <div class="grid grid-cols-2 gap-3">
+          ${decisions.slice(0, 4).map(d => `
+            <button class="btn-decision p-4 bg-gray-900/80 border border-gray-700 rounded-lg text-left hover:border-${d.color}-600 hover:bg-${d.color}-900/20 transition-all group" data-decision="${d.id}">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-2xl group-hover:scale-110 transition-transform">${d.icon}</span>
+                <span class="font-medium text-white">${d.label}</span>
+              </div>
+              <p class="text-xs text-gray-500">${d.desc}</p>
+            </button>
+          `).join('')}
+        </div>
+        <button class="btn-decision w-full mt-3 p-4 bg-purple-900/30 border border-purple-700/50 rounded-lg text-left hover:border-purple-500 hover:bg-purple-900/50 transition-all group" data-decision="legal">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-2xl group-hover:scale-110 transition-transform">⚖</span>
+            <span class="font-medium text-white">ดำเนินการทางกฎหมาย</span>
+          </div>
+          <p class="text-xs text-gray-500">ใช้มาตรการทางกฎหมายอย่างเข้มงวด</p>
+        </button>
+      `;
+      
+      // Add event listeners
+      panel.querySelectorAll('[data-decision]').forEach(btn => {
+        btn.addEventListener('click', () => handleDecision(btn.dataset.decision));
+      });
+    }
+    
+    function updateRiskMeter(caseData) {
+      const meter = document.getElementById('risk-meter');
+      const indicator = document.getElementById('risk-indicator');
+      const levelBadge = document.getElementById('risk-level');
+      
+      const risk = caseData.baseRisk;
+      meter.style.height = `${risk}%`;
+      indicator.style.bottom = `${risk}%`;
+      indicator.textContent = `◄ ${risk}%`;
+      
+      // Update risk level badge
+      let levelText, levelClass;
+      if (risk < 35) {
+        levelText = 'LOW';
+        levelClass = 'bg-green-900/50 border-green-700 text-green-500';
+      } else if (risk < 65) {
+        levelText = 'MODERATE';
+        levelClass = 'bg-yellow-900/50 border-yellow-700 text-yellow-500';
+      } else {
+        levelText = 'HIGH';
+        levelClass = 'bg-red-900/50 border-red-700 text-red-500';
+      }
+      
+      levelBadge.textContent = levelText;
+      levelBadge.className = `px-2 py-1 border rounded text-xs mono ${levelClass}`;
+      
+      // Update individual risks
+      document.getElementById('copyright-risk').textContent = `${caseData.risks.copyright}%`;
+      document.getElementById('copyright-risk').className = `mono ${getRiskColorClass(caseData.risks.copyright)}`;
+      
+      document.getElementById('trademark-risk').textContent = `${caseData.risks.trademark}%`;
+      document.getElementById('trademark-risk').className = `mono ${getRiskColorClass(caseData.risks.trademark)}`;
+      
+      document.getElementById('lawsuit-risk').textContent = `${caseData.risks.lawsuit}%`;
+      document.getElementById('lawsuit-risk').className = `mono ${getRiskColorClass(caseData.risks.lawsuit)}`;
+    }
+    
+    function getRiskColorClass(risk) {
+      if (risk < 35) return 'text-green-500';
+      if (risk < 65) return 'text-yellow-500';
+      return 'text-red-500';
+    }
+    
+    function renderAIUses() {
+      const container = document.getElementById('ai-uses');
+      container.innerHTML = Array(3).fill(0).map((_, i) => `
+        <div class="w-6 h-6 rounded ${i < gameState.aiUsesLeft ? 'bg-red-600' : 'bg-gray-800'} flex items-center justify-center text-xs">
+          ${i < gameState.aiUsesLeft ? '🔍' : ''}
+        </div>
+      `).join('');
+      
+      // Update button state
+      const btn = document.getElementById('ai-btn');
+      btn.disabled = gameState.aiUsesLeft <= 0;
+    }
+    
+    function handleAIAnalysis() {
+      if (gameState.aiUsesLeft <= 0) return;
+      
+      gameState.aiUsesLeft--;
+      gameState.credibility = Math.max(0, gameState.credibility - 5);
+      
+      const caseData = cases[gameState.currentCase];
+      const output = document.getElementById('ai-output');
+      
+      output.innerHTML = `
+        <span class="text-red-500">[AI ANALYSIS INITIATED]</span><br>
+        <span class="text-gray-400">กำลังวิเคราะห์...</span>
+      `;
+      
+      setTimeout(() => {
+        output.innerHTML = `
+          <span class="text-red-500">[AI ANALYSIS COMPLETE]</span><br><br>
+          <span class="text-gray-300">${caseData.aiAnalysis}</span><br><br>
+          <span class="text-yellow-500/70">⚠ หมายเหตุ: AI ให้คำแนะนำเบื้องต้นเท่านั้น การตัดสินใจสุดท้ายขึ้นอยู่กับดุลยพินิจของคุณ</span>
+        `;
+      }, 1500);
+      
+      renderAIUses();
+      updateCredibility();
+    }
+    
+    function handleDecision(decision) {
+      const caseData = cases[gameState.currentCase];
+      const outcome = caseData.outcomes[decision];
+      
+      // Update stats
+      const statMap = {
+        approve: 'approved',
+        warn: 'warned',
+        reject: 'rejected',
+        permission: 'permission',
+        legal: 'legal'
+      };
+      gameState.stats[statMap[decision]]++;
+      
+      // Update credibility
+      gameState.credibility = Math.max(0, Math.min(100, 
+        gameState.credibility + outcome.credibilityChange
+      ));
+      
+      // Store decision
+      gameState.decisions.push({
+        caseId: caseData.id,
+        decision,
+        outcome: outcome.type
+      });
+      
+      // Show outcome
+      showOutcome(outcome, decision);
+      
+      updateStats();
+      updateCredibility();
+    }
+    
+    function showOutcome(outcome, decision) {
+      const modal = document.getElementById('outcome-modal');
+      const header = document.getElementById('outcome-header');
+      const content = document.getElementById('outcome-content');
+      
+      const decisionInfo = decisions.find(d => d.id === decision);
+      
+      let typeColor, typeIcon;
+      switch (outcome.type) {
+        case 'positive':
+          typeColor = 'green';
+          typeIcon = '✓';
+          break;
+        case 'negative':
+          typeColor = 'red';
+          typeIcon = '✕';
+          break;
+        default:
+          typeColor = 'yellow';
+          typeIcon = '○';
+      }
+      
+      header.className = `px-6 py-4 border-b border-gray-800 bg-${typeColor}-900/30`;
+      header.innerHTML = `
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">${typeIcon}</span>
+          <div>
+            <h3 class="text-lg font-bold mono">${outcome.title}</h3>
+            <p class="text-sm text-gray-400">คุณเลือก: ${decisionInfo.label}</p>
+          </div>
+        </div>
+      `;
+      
+      content.innerHTML = `
+        <p class="text-gray-300 leading-relaxed mb-6">${outcome.description}</p>
+        
+        <div class="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
+          <span class="text-sm text-gray-400">ผลกระทบต่อความน่าเชื่อถือ</span>
+          <span class="text-lg mono ${outcome.credibilityChange > 0 ? 'text-green-500' : outcome.credibilityChange < 0 ? 'text-red-500' : 'text-gray-400'}">
+            ${outcome.credibilityChange > 0 ? '+' : ''}${outcome.credibilityChange}%
+          </span>
+        </div>
+      `;
+      
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    
+    function closeOutcomeAndNext() {
+      const modal = document.getElementById('outcome-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      
+      gameState.currentCase++;
+      
+      if (gameState.currentCase >= cases.length) {
+        showGameOver();
+      } else {
+        renderCase();
+      }
+    }
+    
+    function showGameOver() {
+      const modal = document.getElementById('gameover-modal');
+      const statsEl = document.getElementById('final-stats');
+      const messageEl = document.getElementById('final-message');
+      
+      // Calculate final assessment
+      const positiveOutcomes = gameState.decisions.filter(d => d.outcome === 'positive').length;
+      const negativeOutcomes = gameState.decisions.filter(d => d.outcome === 'negative').length;
+      
+      let assessment, assessmentColor;
+      if (gameState.credibility >= 80 && positiveOutcomes > negativeOutcomes) {
+        assessment = 'ดีเยี่ยม';
+        assessmentColor = 'text-green-500';
+      } else if (gameState.credibility >= 50) {
+        assessment = 'พอใช้';
+        assessmentColor = 'text-yellow-500';
+      } else {
+        assessment = 'ต้องปรับปรุง';
+        assessmentColor = 'text-red-500';
+      }
+      
+      statsEl.innerHTML = `
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="text-center">
+            <p class="text-3xl font-bold mono text-white">${gameState.credibility}%</p>
+            <p class="text-sm text-gray-400">ความน่าเชื่อถือ</p>
+          </div>
+          <div class="text-center">
+            <p class="text-3xl font-bold mono text-green-500">${positiveOutcomes}</p>
+            <p class="text-sm text-gray-400">ผลลัพธ์เชิงบวก</p>
+          </div>
+          <div class="text-center">
+            <p class="text-3xl font-bold mono text-red-500">${negativeOutcomes}</p>
+            <p class="text-sm text-gray-400">ผลลัพธ์เชิงลบ</p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-5 gap-2 text-center text-xs">
+          <div>
+            <p class="text-lg font-bold text-green-500">${gameState.stats.approved}</p>
+            <p class="text-gray-500">อนุญาต</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold text-yellow-500">${gameState.stats.warned}</p>
+            <p class="text-gray-500">เตือน</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold text-red-500">${gameState.stats.rejected}</p>
+            <p class="text-gray-500">ปฏิเสธ</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold text-blue-500">${gameState.stats.permission}</p>
+            <p class="text-gray-500">ขออนุญาต</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold text-purple-500">${gameState.stats.legal}</p>
+            <p class="text-gray-500">กฎหมาย</p>
+          </div>
+        </div>
+      `;
+      
+      messageEl.innerHTML = `
+        <h3 class="text-lg font-bold mb-3">การประเมินผล: <span class="${assessmentColor}">${assessment}</span></h3>
+        <p class="text-gray-400 leading-relaxed mb-4">
+          ${gameState.credibility >= 70 
+            ? 'คุณแสดงให้เห็นถึงความเข้าใจที่ดีในเรื่องทรัพย์สินทางปัญญาในโลกดิจิทัล การตัดสินใจส่วนใหญ่ของคุณนำไปสู่ผลลัพธ์ที่ดี'
+            : 'การตัดสินใจในเรื่องทรัพย์สินทางปัญญาไม่ใช่เรื่องง่าย ประสบการณ์จากเกมนี้แสดงให้เห็นว่าทุกการตัดสินใจมีผลกระทบที่ต้องรับผิดชอบ'
+          }
+        </p>
+        <div class="p-4 bg-gray-800/50 rounded border border-gray-700">
+          <p class="text-sm text-gray-300 italic">
+            "กฎหมายทรัพย์สินทางปัญญาไม่ใช่เรื่องขาวหรือดำ แต่เป็นเรื่องของการตัดสินใจ ความรับผิดชอบ และผลกระทบในโลกจริง"
+          </p>
+        </div>
+      `;
+      
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    
+    function restartGame() {
+      gameState = {
+        currentCase: 0,
+        credibility: 100,
+        aiUsesLeft: 3,
+        stats: {
+          approved: 0,
+          warned: 0,
+          rejected: 0,
+          permission: 0,
+          legal: 0
+        },
+        decisions: []
+      };
+      
+      document.getElementById('gameover-modal').classList.add('hidden');
+      document.getElementById('gameover-modal').classList.remove('flex');
+      
+      initGame();
+      updateCredibility();
+    }
+    
+    function updateStats() {
+      document.getElementById('stat-approved').textContent = gameState.stats.approved;
+      document.getElementById('stat-warned').textContent = gameState.stats.warned;
+      document.getElementById('stat-rejected').textContent = gameState.stats.rejected;
+      document.getElementById('stat-permission').textContent = gameState.stats.permission;
+      document.getElementById('stat-legal').textContent = gameState.stats.legal;
+    }
+    
+    function updateCredibility() {
+      const bar = document.getElementById('credibility-bar');
+      const text = document.getElementById('credibility-text');
+      
+      bar.style.width = `${gameState.credibility}%`;
+      text.textContent = `${gameState.credibility}%`;
+      
+      // Change color based on credibility
+      if (gameState.credibility < 30) {
+        bar.className = 'h-full bg-gradient-to-r from-red-700 to-red-500 risk-bar';
+      } else if (gameState.credibility < 60) {
+        bar.className = 'h-full bg-gradient-to-r from-yellow-700 to-yellow-500 risk-bar';
+      } else {
+        bar.className = 'h-full bg-gradient-to-r from-red-600 to-red-500 risk-bar';
+      }
+    }
+    
+    function setupEventListeners() {
+      document.getElementById('ai-btn').addEventListener('click', handleAIAnalysis);
+      document.getElementById('outcome-next').addEventListener('click', closeOutcomeAndNext);
+      document.getElementById('restart-btn').addEventListener('click', restartGame);
+    }
+    
+    // Initialize
+    initSDK();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c5aa98d43e833b6',t:'MTc2OTcwOTk3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c5af7cef2b7a62b',t:'MTc2OTcxMzE4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
