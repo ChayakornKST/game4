@@ -1,0 +1,1252 @@
+<!doctype html>
+<html lang="th" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Creation - IP Law Game</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&amp;family=EB+Garamond:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      font-family: 'EB Garamond', 'Crimson Text', serif;
+      background: #0a0a0a;
+      color: #d4d4d4;
+      overflow: auto;
+    }
+
+    .app-wrapper {
+      min-height: 100%;
+      width: 100%;
+      background: linear-gradient(180deg, #1a1410 0%, #0a0a0a 100%);
+      position: relative;
+    }
+
+    .grain-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      opacity: 0.8;
+      z-index: 100;
+    }
+
+    .game-container {
+      min-height: 100%;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .creation-header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid rgba(150, 100, 70, 0.2);
+    }
+
+    .artwork-display {
+      margin-bottom: 40px;
+    }
+
+    .artwork-frame {
+      background: rgba(20, 15, 10, 0.8);
+      border: 3px solid rgba(139, 115, 85, 0.4);
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto 16px;
+      position: relative;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      transition: all 0.8s ease;
+    }
+
+    .artwork-frame.degrading {
+      border-color: rgba(139, 69, 19, 0.6);
+      box-shadow: 0 8px 32px rgba(139, 69, 19, 0.3);
+    }
+
+    #artworkSVG {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 4px;
+      transition: all 1s ease;
+    }
+
+    .star {
+      animation: twinkle 3s ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.9; }
+      50% { opacity: 0.3; }
+    }
+
+    .star:nth-child(even) {
+      animation-delay: 1.5s;
+    }
+
+    .degradation-overlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(139, 69, 19, 0.1) 10px,
+        rgba(139, 69, 19, 0.1) 20px
+      );
+      mix-blend-mode: multiply;
+    }
+
+    .degradation-overlay.active {
+      opacity: 1;
+    }
+
+    .watermark-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-25deg);
+      font-size: 3em;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.15);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      text-transform: uppercase;
+      letter-spacing: 8px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .watermark-overlay.active {
+      opacity: 1;
+    }
+
+    .artwork-caption {
+      text-align: center;
+      font-size: 0.95em;
+      color: #998877;
+      font-style: italic;
+      transition: color 0.8s ease;
+    }
+
+    .artwork-caption.violated {
+      color: #8b4513;
+    }
+
+    .creation-title {
+      font-size: 3.2em;
+      font-weight: 700;
+      color: #c9a882;
+      margin-bottom: 12px;
+      font-family: 'Crimson Text', serif;
+      font-style: italic;
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 8px rgba(201, 168, 130, 0.3);
+    }
+
+    .creator-subtitle {
+      font-size: 1.3em;
+      color: #8b7355;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+    }
+
+    .creation-meta {
+      font-size: 1em;
+      color: #665544;
+      font-style: italic;
+    }
+
+    .ownership-section {
+      background: rgba(20, 15, 10, 0.6);
+      border: 1px solid rgba(150, 100, 70, 0.3);
+      border-radius: 8px;
+      padding: 30px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(10px);
+    }
+
+    .ownership-label {
+      font-size: 0.9em;
+      color: #8b7355;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      text-align: center;
+    }
+
+    .ownership-bar-container {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(100, 70, 50, 0.4);
+      border-radius: 4px;
+      height: 40px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .ownership-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #c9a882 0%, #8b7355 100%);
+      transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1.1em;
+      color: #1a1410;
+      position: relative;
+      box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.2);
+    }
+
+    .ownership-bar.critical {
+      background: linear-gradient(90deg, #8b4513 0%, #5a2d0f 100%);
+      animation: flicker 3s ease-in-out infinite;
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .ownership-status {
+      font-size: 0.85em;
+      color: #998877;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .timeline-container {
+      margin-bottom: 50px;
+    }
+
+    .timeline-header {
+      font-size: 1.4em;
+      color: #c9a882;
+      margin-bottom: 24px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding-left: 8px;
+      border-left: 3px solid #8b7355;
+    }
+
+    .events-list {
+      position: relative;
+      padding-left: 40px;
+    }
+
+    .events-list::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, #8b7355 0%, rgba(139, 115, 85, 0.2) 100%);
+    }
+
+    .event-item {
+      position: relative;
+      margin-bottom: 30px;
+      padding-left: 24px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .event-item::before {
+      content: '';
+      position: absolute;
+      left: -36px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #8b7355;
+      border: 2px solid #1a1410;
+      box-shadow: 0 0 12px rgba(139, 115, 85, 0.6);
+    }
+
+    .event-item.violation::before {
+      background: #c94f4f;
+      box-shadow: 0 0 12px rgba(201, 79, 79, 0.8);
+    }
+
+    .event-time {
+      font-size: 0.75em;
+      color: #665544;
+      margin-bottom: 6px;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+    }
+
+    .event-content {
+      background: rgba(20, 15, 10, 0.4);
+      border: 1px solid rgba(100, 70, 50, 0.3);
+      border-radius: 6px;
+      padding: 16px;
+      line-height: 1.7;
+      font-size: 1.05em;
+    }
+
+    .event-item.violation .event-content {
+      border-color: rgba(201, 79, 79, 0.5);
+      background: rgba(30, 10, 10, 0.4);
+    }
+
+    .tools-section {
+      background: rgba(20, 15, 10, 0.6);
+      border: 1px solid rgba(150, 100, 70, 0.3);
+      border-radius: 8px;
+      padding: 30px;
+      margin-bottom: 40px;
+    }
+
+    .tools-header {
+      font-size: 1.3em;
+      color: #c9a882;
+      margin-bottom: 20px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .tool-button {
+      background: linear-gradient(135deg, rgba(40, 30, 20, 0.8) 0%, rgba(30, 22, 15, 0.8) 100%);
+      border: 1px solid rgba(139, 115, 85, 0.4);
+      border-radius: 6px;
+      padding: 20px 16px;
+      color: #d4d4d4;
+      font-size: 0.95em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      font-family: 'EB Garamond', serif;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(201, 168, 130, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .tool-button:not(:disabled):hover::before {
+      left: 100%;
+    }
+
+    .tool-button:not(:disabled):hover {
+      border-color: #c9a882;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(201, 168, 130, 0.3);
+    }
+
+    .tool-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: rgba(100, 70, 50, 0.2);
+    }
+
+    .tool-button.used {
+      background: linear-gradient(135deg, rgba(30, 40, 30, 0.8) 0%, rgba(20, 30, 20, 0.8) 100%);
+      border-color: rgba(100, 150, 100, 0.6);
+      color: #a0c0a0;
+    }
+
+    .tool-icon {
+      font-size: 1.8em;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .tool-name {
+      display: block;
+      font-size: 1em;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .tool-desc {
+      font-size: 0.8em;
+      color: #998877;
+      line-height: 1.4;
+      font-style: italic;
+    }
+
+    .game-controls {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .control-button {
+      background: linear-gradient(135deg, rgba(40, 30, 20, 0.9) 0%, rgba(30, 22, 15, 0.9) 100%);
+      border: 2px solid rgba(139, 115, 85, 0.5);
+      border-radius: 6px;
+      padding: 14px 32px;
+      color: #d4d4d4;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'EB Garamond', serif;
+      margin: 0 8px;
+      letter-spacing: 1px;
+    }
+
+    .control-button:hover {
+      border-color: #c9a882;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(201, 168, 130, 0.3);
+    }
+
+    .control-button.primary {
+      background: linear-gradient(135deg, #8b7355 0%, #6b5745 100%);
+      border-color: #c9a882;
+      color: #fff;
+    }
+
+    .control-button.primary:hover {
+      background: linear-gradient(135deg, #9b8365 0%, #7b6755 100%);
+      box-shadow: 0 6px 20px rgba(201, 168, 130, 0.5);
+    }
+
+    .game-over-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.6s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    .game-over-modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: rgba(26, 20, 16, 0.95);
+      border: 2px solid;
+      border-radius: 12px;
+      padding: 50px 40px;
+      max-width: 600px;
+      text-align: center;
+      animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0.7);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-content.preserved {
+      border-color: #c9a882;
+    }
+
+    .modal-content.lost {
+      border-color: #8b4513;
+    }
+
+    .modal-icon {
+      font-size: 5em;
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    .modal-title {
+      font-size: 2.8em;
+      font-weight: 700;
+      margin-bottom: 20px;
+      font-family: 'Crimson Text', serif;
+      font-style: italic;
+    }
+
+    .modal-content.preserved .modal-title {
+      color: #c9a882;
+      text-shadow: 0 0 20px rgba(201, 168, 130, 0.5);
+    }
+
+    .modal-content.lost .modal-title {
+      color: #8b4513;
+      text-shadow: 0 0 20px rgba(139, 69, 19, 0.5);
+    }
+
+    .modal-message {
+      font-size: 1.2em;
+      line-height: 1.8;
+      color: #d4d4d4;
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+
+    .final-ownership {
+      font-size: 3em;
+      font-weight: 700;
+      margin: 30px 0;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+    }
+
+    .modal-content.preserved .final-ownership {
+      color: #c9a882;
+    }
+
+    .modal-content.lost .final-ownership {
+      color: #8b4513;
+    }
+
+    .restart-button {
+      background: linear-gradient(135deg, #8b7355 0%, #6b5745 100%);
+      border: 2px solid #c9a882;
+      border-radius: 8px;
+      padding: 16px 48px;
+      color: #fff;
+      font-size: 1.2em;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'EB Garamond', serif;
+      letter-spacing: 2px;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+    }
+
+    .restart-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(201, 168, 130, 0.4);
+      background: linear-gradient(135deg, #9b8365 0%, #7b6755 100%);
+    }
+
+    @media (max-width: 768px) {
+      .creation-title {
+        font-size: 2.4em;
+      }
+
+      .creator-subtitle {
+        font-size: 1.1em;
+      }
+
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        margin: 20px;
+        padding: 40px 24px;
+      }
+
+      .modal-title {
+        font-size: 2.2em;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div class="grain-overlay"></div>
+  <div class="app-wrapper h-full">
+   <div class="game-container">
+    <div class="creation-header">
+     <h1 class="creation-title" id="creationTitle">Midnight Dreams</h1>
+     <div class="creator-subtitle">
+      สร้างสรรค์โดย <span id="creatorName">คุณ</span>
+     </div>
+     <div class="creation-meta" id="creationMeta">
+      ภาพวาดดิจิทัล
+     </div>
+    </div>
+    <div class="artwork-display">
+     <div class="artwork-frame" id="artworkFrame">
+      <svg viewBox="0 0 400 300" id="artworkSVG"><!-- Original pristine artwork --> <defs>
+        <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+         <stop offset="0%" style="stop-color:#1a1530;stop-opacity:1" />
+         <stop offset="100%" style="stop-color:#2d1b4e;stop-opacity:1" />
+        </linearGradient>
+        <filter id="glowFilter">
+         <feGaussianBlur stddeviation="3" result="coloredBlur" />
+         <femerge>
+          <femergenode in="coloredBlur" />
+          <femergenode in="SourceGraphic" />
+         </femerge>
+        </filter>
+       </defs> <!-- Background --> <rect width="400" height="300" fill="url(#skyGradient)" /> <!-- Stars --> <circle cx="50" cy="40" r="1.5" fill="#fff" opacity="0.9" class="star" /> <circle cx="120" cy="60" r="1" fill="#fff" opacity="0.7" class="star" /> <circle cx="200" cy="30" r="1.2" fill="#fff" opacity="0.8" class="star" /> <circle cx="280" cy="50" r="1" fill="#fff" opacity="0.6" class="star" /> <circle cx="350" cy="70" r="1.5" fill="#fff" opacity="0.9" class="star" /> <circle cx="90" cy="90" r="0.8" fill="#fff" opacity="0.5" class="star" /> <circle cx="320" cy="25" r="1" fill="#fff" opacity="0.7" class="star" /> <!-- Moon --> <circle cx="320" cy="80" r="35" fill="#ffd699" filter="url(#glowFilter)" class="moon" /> <circle cx="310" cy="75" r="30" fill="#2d1b4e" opacity="0.3" class="moon-crater" /> <!-- Mountains --> <path d="M 0 220 L 100 150 L 200 200 L 300 130 L 400 180 L 400 300 L 0 300 Z" fill="#1a0f2e" opacity="0.8" class="mountain" /> <!-- Foreground mountain --> <path d="M 0 250 L 80 200 L 150 230 L 250 170 L 350 210 L 400 190 L 400 300 L 0 300 Z" fill="#0d0818" class="mountain-front" /> <!-- Signature --> <text x="350" y="285" font-family="'Crimson Text', serif" font-size="12" fill="#8b7355" opacity="0.8" text-anchor="end" class="signature">
+        คุณ
+       </text>
+      </svg><!-- Degradation overlays -->
+      <div class="degradation-overlay" id="degradationOverlay"></div>
+      <div class="watermark-overlay" id="watermarkOverlay"></div>
+     </div>
+     <div class="artwork-caption" id="artworkCaption">
+      ผลงานต้นฉบับ — สมบูรณ์และบริสุทธิ์
+     </div>
+    </div>
+    <div class="ownership-section">
+     <div class="ownership-label">
+      สิทธิความเป็นเจ้าของ
+     </div>
+     <div class="ownership-bar-container">
+      <div class="ownership-bar" id="ownershipBar" style="width: 100%">
+       100%
+      </div>
+     </div>
+     <div class="ownership-status" id="ownershipStatus">
+      ผลงานอยู่ภายใต้การควบคุมของคุณอย่างสมบูรณ์
+     </div>
+    </div>
+    <div class="game-controls"><button class="control-button primary" id="startButton" onclick="startGame()">เริ่มเรื่องราว</button> <button class="control-button" id="pauseButton" onclick="togglePause()" style="display: none;">หยุดชั่วคราว</button> <button class="control-button" onclick="resetGame()">เริ่มใหม่</button>
+    </div>
+    <div class="tools-section">
+     <div class="tools-header">
+      เครื่องมือทางกฎหมาย
+     </div>
+     <div class="tools-grid"><button class="tool-button" id="tool1" onclick="useTool('dmca')"> <span class="tool-icon">⚖️</span> <span class="tool-name">DMCA Takedown</span> <span class="tool-desc">ส่งคำขอลบผลงานที่ละเมิด</span> </button> <button class="tool-button" id="tool2" onclick="useTool('cease')"> <span class="tool-icon">📜</span> <span class="tool-name">Cease &amp; Desist</span> <span class="tool-desc">จดหมายเตือนให้หยุดการละเมิด</span> </button> <button class="tool-button" id="tool3" onclick="useTool('license')"> <span class="tool-icon">🤝</span> <span class="tool-name">ออกใบอนุญาต</span> <span class="tool-desc">อนุญาตให้ใช้อย่างถูกกฎหมาย</span> </button> <button class="tool-button" id="tool4" onclick="useTool('lawsuit')"> <span class="tool-icon">⚔️</span> <span class="tool-name">ฟ้องร้อง</span> <span class="tool-desc">ดำเนินคดีเพื่อเรียกค่าเสียหาย</span> </button> <button class="tool-button" id="tool5" onclick="useTool('watermark')"> <span class="tool-icon">🔏</span> <span class="tool-name">ลายน้ำดิจิทัล</span> <span class="tool-desc">ป้องกันการลอกในอนาคต</span> </button> <button class="tool-button" id="tool6" onclick="useTool('negotiate')"> <span class="tool-icon">💬</span> <span class="tool-name">เจรจาต่อรอง</span> <span class="tool-desc">พูดคุยเพื่อหาข้อตกลง</span> </button>
+     </div>
+    </div>
+    <div class="timeline-container">
+     <div class="timeline-header">
+      เส้นทางผลงาน
+     </div>
+     <div class="events-list" id="eventsList"></div>
+    </div>
+   </div>
+  </div>
+  <div class="game-over-modal" id="gameOverModal">
+   <div class="modal-content" id="modalContent"><span class="modal-icon" id="modalIcon">✨</span>
+    <h2 class="modal-title" id="modalTitle">จบเรื่องราว</h2>
+    <p class="modal-message" id="modalMessage">ผลงานของคุณได้รับการปกป้อง</p>
+    <div class="final-ownership" id="finalOwnership">
+     100%
+    </div><button class="restart-button" onclick="resetGame()">เริ่มเรื่องใหม่</button>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      creation_name: "Midnight Dreams",
+      creator_name: "คุณ",
+      creation_type: "ภาพวาดดิจิทัล"
+    };
+
+    let gameState = {
+      running: false,
+      paused: false,
+      time: 0,
+      ownership: 100,
+      usedTools: new Set(),
+      eventIndex: 0,
+      timerInterval: null,
+      visualDegradation: 0
+    };
+
+    // Base timeline events
+    const baseEvents = [
+      {
+        time: 0,
+        text: "คุณเผยแพร่ผลงานของคุณบนอินเทอร์เน็ต ด้วยความภาคภูมิใจและความหวัง",
+        type: "normal",
+        visual: "pristine"
+      }
+    ];
+
+    // Random violation events pool
+    const violationPool = [
+      {
+        text: "มีคนแชร์ผลงานของคุณบน Facebook โดยครอปชื่อออก ได้ไลก์ 50,000 ครั้ง",
+        type: "violation",
+        impact: -6,
+        visual: "fade"
+      },
+      {
+        text: "ร้านกาแฟใช้ภาพของคุณตกแต่งผนัง คุณไปเจอเข้าตอนซื้อกาแฟ แต่ไม่มีใครรู้ว่าคุณคือคนวาด",
+        type: "violation",
+        impact: -8,
+        visual: "desaturate"
+      },
+      {
+        text: "นักเรียนศิลปะส่งผลงานของคุณเป็นการบ้าน ได้เกรด A และคำชมจากอาจารย์",
+        type: "violation",
+        impact: -7,
+        visual: "fade"
+      },
+      {
+        text: "บริษัทโฆษณาใช้ภาพของคุณโฆษณาสินค้า งบโฆษณา 2 ล้านบาท คุณไม่ได้อะไรเลย",
+        type: "violation",
+        impact: -12,
+        visual: "commercial"
+      },
+      {
+        text: "ผลงานของคุณถูกพิมพ์ลงเสื้อและขายบน Shopee ราคา 299 บาท ขายไปแล้ว 500 ตัว",
+        type: "violation",
+        impact: -10,
+        visual: "desaturate"
+      },
+      {
+        text: "Influencer โพสต์ภาพคุณพร้อมข้อความ 'ภาพที่ชอบ ❤️' ไม่มีเครดิต มีคนเห็น 200,000 คน",
+        type: "violation",
+        impact: -9,
+        visual: "fade"
+      },
+      {
+        text: "มีคนใช้ AI ปรับแต่งภาพของคุณ อ้างว่าเป็น 'ผลงานร่วม' ระหว่างเขากับ AI",
+        type: "violation",
+        impact: -11,
+        visual: "distort"
+      },
+      {
+        text: "เว็บข่าวใช้ภาพคุณประกอบบทความโดยไม่ขออนุญาต อ้างว่า 'พบในอินเทอร์เน็ต'",
+        type: "violation",
+        impact: -7,
+        visual: "fade"
+      },
+      {
+        text: "คนทำ NFT นำภาพคุณไป mint ขายได้ 0.5 ETH คุณรู้เรื่องทีหลัง ทำอะไรไม่ได้แล้ว",
+        type: "violation",
+        impact: -13,
+        visual: "commercial"
+      },
+      {
+        text: "มีคนดัดแปลงผลงานคุณเป็นสติกเกอร์ LINE ขายชุดละ 30 บาท ยอดขายติดอันดับ",
+        type: "violation",
+        impact: -10,
+        visual: "commercial"
+      },
+      {
+        text: "โรงพิมพ์เอาภาพคุณทำเป็นโปสเตอร์แจกฟรีในงานอีเวนต์ 10,000 ใบ",
+        type: "violation",
+        impact: -8,
+        visual: "desaturate"
+      },
+      {
+        text: "บริษัทเกมมือถือใช้ภาพคุณเป็น loading screen โดยไม่แจ้ง เกมมีคนเล่น 1 ล้านคน",
+        type: "violation",
+        impact: -14,
+        visual: "commercial"
+      },
+      {
+        text: "ช่อง YouTube รีวิวงานศิลปะ วิจารณ์ผลงานคุณ 20 นาที แต่ระบุชื่อผิดตลอดคลิป",
+        type: "violation",
+        impact: -9,
+        visual: "fade"
+      },
+      {
+        text: "มีคนทำวอลเปเปอร์มือถือจากภาพคุณ อัปโหลดเว็บดาวน์โหลดฟรี มีคนโหลด 50,000 ครั้ง",
+        type: "violation",
+        impact: -6,
+        visual: "fade"
+      },
+      {
+        text: "ผู้คนเริ่มจำภาพได้ แต่ไม่รู้จักชื่อคุณ ผลงานกลายเป็น 'ภาพที่เค้าเห็นที่ไหนสักแห่ง'",
+        type: "violation",
+        impact: -10,
+        visual: "desaturate"
+      },
+      {
+        text: "เพื่อนของคุณส่งภาพผลงานคุณมาให้คุณดู บอกว่า 'เจ๋งมากเลย ไม่รู้ใครวาด'",
+        type: "violation",
+        impact: -11,
+        visual: "fade"
+      },
+      {
+        text: "มีคนถามใน subreddit ว่า 'ใครรู้จักศิลปินภาพนี้บ้าง' มี 50 comments แต่ไม่มีใครรู้",
+        type: "violation",
+        impact: -8,
+        visual: "fade"
+      },
+      {
+        text: "Gallery ท้องถิ่นแขวนภาพคุณในนิทรรศการ แต่ใส่ป้าย 'ศิลปินไม่ระบุตัวตน'",
+        type: "violation",
+        impact: -12,
+        visual: "desaturate"
+      },
+      {
+        text: "บริษัทพิมพ์ปฏิทินใช้ภาพคุณเป็นเดือนมีนาคม จัดจำหน่ายทั่วประเทศ",
+        type: "violation",
+        impact: -9,
+        visual: "commercial"
+      },
+      {
+        text: "Pinterest เต็มไปด้วยภาพของคุณ ทุกภาพชี้ไปที่ลิงก์ต่างๆ แต่ไม่มีลิงก์ไหนชี้ไปหาคุณ",
+        type: "violation",
+        impact: -7,
+        visual: "fade"
+      }
+    ];
+
+    let events = [
+      {
+        time: 0,
+        text: "คุณเผยแพร่ผลงานของคุณบนอินเทอร์เน็ต ด้วยความภาคภูมิใจและความหวัง",
+        type: "normal"
+      },
+      {
+        time: 3,
+        text: "มีคนแชร์ผลงานของคุณโดยไม่ระบุที่มา ผลงานเริ่มแพร่กระจาย",
+        type: "violation",
+        impact: -5
+      },
+      {
+        time: 7,
+        text: "บริษัทโฆษณาขนาดเล็กนำภาพของคุณไปใช้ในแคมเปญโดยไม่ขออนุญาต",
+        type: "violation",
+        impact: -8
+      },
+      {
+        time: 12,
+        text: "ผลงานของคุณถูกพิมพ์ลงเสื้อและขายออนไลน์ โดยผู้ขายอ้างว่าเป็นผลงานของตน",
+        type: "violation",
+        impact: -10
+      },
+      {
+        time: 18,
+        text: "มีคนดัดแปลงภาพของคุณและอ้างว่าสร้างขึ้นเอง ได้รับความสนใจมากกว่าผลงานต้นฉบับ",
+        type: "violation",
+        impact: -12
+      },
+      {
+        time: 25,
+        text: "บริษัทขนาดใหญ่ใช้ผลงานของคุณในการนำเสนองาน โดยไม่มีการติดต่อใดๆ",
+        type: "violation",
+        impact: -15
+      },
+      {
+        time: 33,
+        text: "ผู้คนเริ่มจำภาพได้ แต่ไม่รู้จักชื่อคุณ ผลงานกลายเป็นสมบัติสาธารณะในสายต่อของคนทั่วไป",
+        type: "violation",
+        impact: -10
+      },
+      {
+        time: 42,
+        text: "มีคนถามคุณว่าทำไมถึงลอกเลียนผลงานคนอื่น ทั้งที่นั่นคือผลงานของคุณเอง",
+        type: "violation",
+        impact: -8
+      },
+      {
+        time: 50,
+        text: "ผลงานของคุณถูกใช้ในหลากหลายบริบท บางที่เหมาะสม บางที่ไม่เคารพต้นฉบับ",
+        type: "violation",
+        impact: -7
+      }
+    ];
+
+    let event = [];
+
+    // Generate random timeline with violations
+    function generateRandomTimeline() {
+      events = [...baseEvents];
+      
+      // Shuffle violations
+      const shuffled = [...violationPool].sort(() => Math.random() - 0.5);
+      
+      // Select 9 violations
+      const selectedViolations = shuffled.slice(0, 9);
+      
+      // Assign random times between 3-57 seconds
+      const times = [];
+      for (let i = 0; i < 9; i++) {
+        times.push(3 + Math.floor(Math.random() * 54));
+      }
+      times.sort((a, b) => a - b);
+      
+      // Add violations with assigned times
+      selectedViolations.forEach((violation, index) => {
+        events.push({
+          time: times[index],
+          ...violation
+        });
+      });
+      
+      // Sort by time
+      events.sort((a, b) => a.time - b.time);
+    }
+
+    function updateUIFromConfig() {
+      const config = window.elementSdk ? window.elementSdk.config : {};
+      document.getElementById('creationTitle').textContent = config.creation_name || defaultConfig.creation_name;
+      document.getElementById('creatorName').textContent = config.creator_name || defaultConfig.creator_name;
+      document.getElementById('creationMeta').textContent = config.creation_type || defaultConfig.creation_type;
+    }
+
+    function updateOwnershipBar() {
+      const bar = document.getElementById('ownershipBar');
+      const status = document.getElementById('ownershipStatus');
+      
+      bar.style.width = gameState.ownership + '%';
+      bar.textContent = gameState.ownership + '%';
+
+      if (gameState.ownership <= 30) {
+        bar.classList.add('critical');
+      } else {
+        bar.classList.remove('critical');
+      }
+
+      if (gameState.ownership >= 90) {
+        status.textContent = 'ผลงานอยู่ภายในการควบคุมของคุณอย่างสมบูรณ์';
+      } else if (gameState.ownership >= 70) {
+        status.textContent = 'คุณยังคงมีสิทธิ์เหนือผลงานส่วนใหญ่';
+      } else if (gameState.ownership >= 50) {
+        status.textContent = 'ผลงานกำลังหลุดมือของคุณเรื่อยๆ';
+      } else if (gameState.ownership >= 30) {
+        status.textContent = 'คุณกำลังสูญเสียการควบคุมผลงานของคุณ';
+      } else if (gameState.ownership > 0) {
+        status.textContent = 'ผลงานเกือบจะไม่ได้เป็นของคุณอีกต่อไป...';
+      } else {
+        status.textContent = 'ผลงานไม่ได้เป็นของคุณอีกแล้ว';
+      }
+    }
+
+    function addEvent(eventData) {
+      const eventsList = document.getElementById('eventsList');
+      const eventItem = document.createElement('div');
+      eventItem.className = 'event-item' + (eventData.type === 'violation' ? ' violation' : '');
+      
+      const minutes = Math.floor(gameState.time / 60);
+      const seconds = gameState.time % 60;
+      const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      
+      eventItem.innerHTML = `
+        <div class="event-time">${timeStr}</div>
+        <div class="event-content">${eventData.text}</div>
+      `;
+      
+      eventsList.appendChild(eventItem);
+      
+      setTimeout(() => {
+        eventItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+
+      if (eventData.impact) {
+        gameState.ownership = Math.max(0, gameState.ownership + eventData.impact);
+        updateOwnershipBar();
+      }
+
+      // Apply visual degradation
+      if (eventData.visual && eventData.visual !== 'pristine') {
+        applyVisualDegradation(eventData.visual);
+      }
+    }
+
+    function applyVisualDegradation(visualType) {
+      const svg = document.getElementById('artworkSVG');
+      const frame = document.getElementById('artworkFrame');
+      const overlay = document.getElementById('degradationOverlay');
+      const caption = document.getElementById('artworkCaption');
+      
+      gameState.visualDegradation++;
+      
+      // Progressive degradation effects
+      const degradationLevel = gameState.visualDegradation;
+      
+      if (degradationLevel >= 1) {
+        frame.classList.add('degrading');
+        overlay.classList.add('active');
+      }
+      
+      if (visualType === 'fade' || visualType === 'desaturate') {
+        const currentOpacity = parseFloat(svg.style.opacity || 1);
+        svg.style.opacity = Math.max(0.3, currentOpacity - 0.08);
+        
+        if (visualType === 'desaturate') {
+          const currentFilter = svg.style.filter || '';
+          const currentSat = parseFloat(currentFilter.match(/saturate\(([\d.]+)\)/)?.[1] || 1);
+          svg.style.filter = `saturate(${Math.max(0.2, currentSat - 0.12)})`;
+        }
+      }
+      
+      if (visualType === 'commercial') {
+        overlay.style.opacity = Math.min(1, parseFloat(overlay.style.opacity || 0) + 0.15);
+      }
+      
+      if (visualType === 'distort') {
+        const currentFilter = svg.style.filter || '';
+        svg.style.filter = currentFilter + ' blur(0.5px)';
+      }
+      
+      // Update caption based on degradation
+      if (degradationLevel <= 2) {
+        caption.textContent = 'ผลงานเริ่มแพร่กระจาย...';
+        caption.classList.add('violated');
+      } else if (degradationLevel <= 4) {
+        caption.textContent = 'มีคนใช้งานโดยไม่ขออนุญาต';
+        caption.classList.add('violated');
+      } else if (degradationLevel <= 6) {
+        caption.textContent = 'คุณกำลังสูญเสียการควบคุม';
+        caption.classList.add('violated');
+      } else {
+        caption.textContent = 'ผลงานไม่ได้เป็นของคุณอีกต่อไป';
+        caption.classList.add('violated');
+      }
+    }
+
+    function useTool(toolType) {
+      if (gameState.usedTools.has(toolType)) {
+        return;
+      }
+
+      gameState.usedTools.add(toolType);
+
+      let eventText = '';
+      let ownershipGain = 0;
+
+      switch(toolType) {
+        case 'dmca':
+          eventText = 'คุณส่ง DMCA Takedown Notice ผลงานบางส่วนถูกลบออกจากแพลตฟอร์ม แต่คนอื่นก็อัปโหลดใหม่';
+          ownershipGain = 8;
+          break;
+        case 'cease':
+          eventText = 'คุณส่งจดหมาย Cease & Desist ผู้ละเมิดบางรายหยุดใช้ แต่หลายคนเพิกเฉย';
+          ownershipGain = 6;
+          break;
+        case 'license':
+          eventText = 'คุณเสนอใบอนุญาตราคาถูก บางคนยอมจ่าย แต่ส่วนใหญ่เลือกใช้ฟรีต่อไป';
+          ownershipGain = 10;
+          break;
+        case 'lawsuit':
+          eventText = 'คุณฟ้องร้องผู้ละเมิดรายใหญ่ ชนะคดีและได้ค่าเสียหาย แต่ผลงานยังคงถูกใช้โดยคนอื่นๆ';
+          ownershipGain = 15;
+          break;
+        case 'watermark':
+          eventText = 'คุณเพิ่มลายน้ำในผลงานใหม่ ช่วยป้องกันการลอกในอนาคต แต่ผลงานเก่ายังคงถูกใช้อยู่';
+          ownershipGain = 7;
+          break;
+        case 'negotiate':
+          eventText = 'คุณเจรจากับผู้ใช้งานหลายราย บางคนยอมตกลง แต่ไม่อาจติดตามทุกคนได้';
+          ownershipGain = 5;
+          break;
+      }
+
+      gameState.ownership = Math.min(100, gameState.ownership + ownershipGain);
+      updateOwnershipBar();
+      
+      addEvent({
+        text: eventText,
+        type: 'action'
+      });
+
+      const button = document.getElementById('tool' + 
+        ({dmca: 1, cease: 2, license: 3, lawsuit: 4, watermark: 5, negotiate: 6}[toolType]));
+      button.disabled = true;
+      button.classList.add('used');
+    }
+
+    function gameLoop() {
+      if (!gameState.running || gameState.paused) return;
+
+      gameState.time++;
+
+      if (gameState.eventIndex < events.length) {
+        const nextEvent = events[gameState.eventIndex];
+        if (gameState.time >= nextEvent.time) {
+          addEvent(nextEvent);
+          gameState.eventIndex++;
+        }
+      }
+
+      if (gameState.time >= 60 || gameState.eventIndex >= events.length) {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      gameState.running = false;
+      clearInterval(gameState.timerInterval);
+
+      const modal = document.getElementById('gameOverModal');
+      const content = document.getElementById('modalContent');
+      const icon = document.getElementById('modalIcon');
+      const title = document.getElementById('modalTitle');
+      const message = document.getElementById('modalMessage');
+      const finalOwn = document.getElementById('finalOwnership');
+
+      finalOwn.textContent = gameState.ownership + '%';
+
+      if (gameState.ownership >= 80) {
+        content.className = 'modal-content preserved';
+        icon.textContent = '✨';
+        title.textContent = 'ผลงานได้รับการปกป้อง';
+        message.textContent = 'คุณปกป้องสิทธิ์ในผลงานได้เป็นอย่างดี แม้จะต้องต่อสู้อย่างหนัก แต่คุณเป็นเจ้าของยังคงอยู่กับคุณ นี่คือชัยชนะของผู้สร้างสรรค์';
+      } else if (gameState.ownership >= 50) {
+        content.className = 'modal-content preserved';
+        icon.textContent = '🕊️';
+        title.textContent = 'ต่อสู้ไปได้บ้าง';
+        message.textContent = 'คุณพยายามปกป้องสิทธิ์ของตัวเอง แม้ผลงานจะหลุดมือไปบางส่วน แต่คุณยังมีเสียงในการควบคุมมัน การรักษาสิทธิ์ต้องใช้ความพยายามอย่างต่อเนื่อง';
+      } else if (gameState.ownership >= 20) {
+        content.className = 'modal-content lost';
+        icon.textContent = '🥀';
+        title.textContent = 'สูญเสียการควบคุม';
+        message.textContent = 'ผลงานของคุณแพร่กระจายไปทั่ว โดยที่คุณไม่อาจควบคุมได้ คนส่วนใหญ่ไม่รู้ว่าคุณคือผู้สร้าง นี่คือความเจ็บปวดของผู้สร้างสรรค์ที่ถูกลืม';
+      } else {
+        content.className = 'modal-content lost';
+        icon.textContent = '💔';
+        title.textContent = 'หายไปในความมืด';
+        message.textContent = 'ผลงานของคุณไม่ได้เป็นของคุณอีกต่อไป มันกลายเป็นของทุกคน... และของไม่มีผู้ควบคุม คุณสร้างมัน แต่โลกเอามันไปโดยไม่เคยรู้ว่าคุณคือใคร';
+      }
+
+      modal.classList.add('show');
+    }
+
+    function startGame() {
+      if (gameState.running) return;
+
+      gameState.running = true;
+      gameState.paused = false;
+
+      document.getElementById('startButton').style.display = 'none';
+      document.getElementById('pauseButton').style.display = 'inline-block';
+
+      addEvent(events[0]);
+      gameState.eventIndex = 1;
+
+      gameState.timerInterval = setInterval(gameLoop, 1000);
+    }
+
+    function togglePause() {
+      gameState.paused = !gameState.paused;
+      const pauseBtn = document.getElementById('pauseButton');
+      pauseBtn.textContent = gameState.paused ? 'ดำเนินต่อ' : 'หยุดชั่วคราว';
+    }
+
+    function resetGame() {
+      clearInterval(gameState.timerInterval);
+
+      gameState = {
+        running: false,
+        paused: false,
+        time: 0,
+        ownership: 100,
+        usedTools: new Set(),
+        eventIndex: 0,
+        timerInterval: null,
+        visualDegradation: 0
+      };
+
+      // Reset visuals
+      const svg = document.getElementById('artworkSVG');
+      const frame = document.getElementById('artworkFrame');
+      const overlay = document.getElementById('degradationOverlay');
+      const watermark = document.getElementById('watermarkOverlay');
+      const caption = document.getElementById('artworkCaption');
+      
+      svg.style.opacity = '1';
+      svg.style.filter = '';
+      frame.classList.remove('degrading');
+      overlay.classList.remove('active');
+      overlay.style.opacity = '';
+      watermark.classList.remove('active');
+      watermark.textContent = '';
+      caption.textContent = 'ผลงานต้นฉบับ — สมบูรณ์และบริสุทธิ์';
+      caption.classList.remove('violated');
+
+      document.getElementById('eventsList').innerHTML = '';
+      document.getElementById('gameOverModal').classList.remove('show');
+      document.getElementById('startButton').style.display = 'inline-block';
+      document.getElementById('pauseButton').style.display = 'none';
+
+      const toolButtons = document.querySelectorAll('.tool-button');
+      toolButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove('used');
+      });
+
+      updateOwnershipBar();
+    }
+
+    async function onConfigChange(config) {
+      updateUIFromConfig();
+    }
+
+    async function init() {
+      // Generate random timeline on page load
+      generateRandomTimeline();
+      
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig: defaultConfig,
+          onConfigChange: onConfigChange,
+          mapToCapabilities: (config) => ({
+            recolorables: [],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ["creation_name", config.creation_name || defaultConfig.creation_name],
+            ["creator_name", config.creator_name || defaultConfig.creator_name],
+            ["creation_type", config.creation_type || defaultConfig.creation_type]
+          ])
+        });
+      }
+
+      updateUIFromConfig();
+      updateOwnershipBar();
+    }
+
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c5aa98d43e833b6',t:'MTc2OTcwOTk3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
